@@ -3,54 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lihat Data Firebase</title>
+  <title>Login & Daftar Firebase</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       background: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    h1 {
-      color: #333;
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 300px;
     }
-    pre {
-      background: #222;
-      color: #0f0;
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    input {
+      width: 100%;
       padding: 10px;
+      margin: 8px 0;
       border-radius: 5px;
-      max-height: 400px;
-      overflow: auto;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #output {
+      margin-top: 15px;
+      font-size: 14px;
+      color: red;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>Data dari Firebase</h1>
-  <pre id="output">Loading...</pre>
+  <div class="container">
+    <h2 id="formTitle">Login</h2>
+
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+
+    <button id="loginBtn">Login</button>
+    <button id="registerBtn">Daftar</button>
+
+    <p id="output"></p>
+  </div>
 
   <!-- Firebase SDK -->
   <script type="module">
     // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+      from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getDatabase, ref, set } 
+      from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    // Konfigurasi Firebase (pakai URL database yang kamu kasih)
+    // Konfigurasi Firebase
     const firebaseConfig = {
-      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/"
+      apiKey: "ISI_APIKEY_MU",
+      authDomain: "esp32-3a6dd.firebaseapp.com",
+      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/",
+      projectId: "esp32-3a6dd",
+      storageBucket: "esp32-3a6dd.appspot.com",
+      messagingSenderId: "ISI_SENDERID",
+      appId: "ISI_APPID"
     };
 
     // Inisialisasi Firebase
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Referensi root database
-    const dbRef = ref(db, "/");
+    // Elemen
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const outputEl = document.getElementById("output");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
 
-    // Ambil data realtime
-    onValue(dbRef, (snapshot) => {
-      const data = snapshot.val();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-    }, (error) => {
-      document.getElementById("output").textContent = "Error: " + error.message;
+    // Tombol daftar
+    registerBtn.addEventListener("click", () => {
+      const email = emailEl.value;
+      const password = passEl.value;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Simpan data user di Realtime Database
+          set(ref(db, "users/" + user.uid), {
+            email: email,
+            createdAt: new Date().toISOString()
+          });
+          outputEl.style.color = "green";
+          outputEl.textContent = "Pendaftaran berhasil! Silakan login.";
+        })
+        .catch((error) => {
+          outputEl.style.color = "red";
+          outputEl.textContent = "Error: " + error.message;
+        });
+    });
+
+    // Tombol login
+    loginBtn.addEventListener("click", () => {
+      const email = emailEl.value;
+      const password = passEl.value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          outputEl.style.color = "green";
+          outputEl.textContent = "Login berhasil! UID: " + user.uid;
+        })
+        .catch((error) => {
+          outputEl.style.color = "red";
+          outputEl.textContent = "Error: " + error.message;
+        });
     });
   </script>
 </body>
