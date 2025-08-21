@@ -2,140 +2,143 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login & Daftar Firebase</title>
+  <title>IoT Panel - Login & Register</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
+      background: linear-gradient(135deg, #4a00e0, #8e2de2);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-    }
-    .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      width: 300px;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 5px;
-      background: #007bff;
       color: #fff;
-      font-size: 16px;
-      cursor: pointer;
     }
-    button:hover {
-      background: #0056b3;
+    .card {
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
-    #output {
-      margin-top: 15px;
-      font-size: 14px;
-      color: red;
-      text-align: center;
+    .hidden {
+      display: none;
+    }
+    .iot-btn {
+      width: 100px;
+      height: 100px;
+      margin: 10px;
+      border-radius: 20px;
+      font-size: 20px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2 id="formTitle">Login</h2>
+    <!-- LOGIN -->
+    <div id="loginPage" class="card p-4 text-dark">
+      <h2 class="text-center mb-3">Login IoT</h2>
+      <input type="email" id="loginEmail" class="form-control mb-3" placeholder="Email">
+      <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password">
+      <button class="btn btn-primary w-100" onclick="login()">Login</button>
+      <p class="mt-3 text-center">Belum punya akun? <a href="#" onclick="showRegister()">Register</a></p>
+    </div>
 
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="password" placeholder="Password" required>
+    <!-- REGISTER -->
+    <div id="registerPage" class="card p-4 text-dark hidden">
+      <h2 class="text-center mb-3">Register Akun</h2>
+      <input type="text" id="regName" class="form-control mb-3" placeholder="Nama Lengkap">
+      <input type="email" id="regEmail" class="form-control mb-3" placeholder="Email">
+      <input type="password" id="regPassword" class="form-control mb-3" placeholder="Password">
+      <button class="btn btn-success w-100" onclick="register()">Daftar</button>
+      <p class="mt-3 text-center">Sudah punya akun? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
 
-    <button id="loginBtn">Login</button>
-    <button id="registerBtn">Daftar</button>
-
-    <p id="output"></p>
+    <!-- PANEL -->
+    <div id="panelPage" class="card p-4 text-dark hidden">
+      <h2 class="text-center mb-3">IoT Control Panel</h2>
+      <p class="text-center">Halo, <span id="userName"></span>!</p>
+      <div class="d-flex justify-content-center flex-wrap">
+        <button class="btn btn-outline-primary iot-btn" onclick="sendCommand('LED1')">LED 1</button>
+        <button class="btn btn-outline-success iot-btn" onclick="sendCommand('LED2')">LED 2</button>
+        <button class="btn btn-outline-warning iot-btn" onclick="sendCommand('FAN')">FAN</button>
+        <button class="btn btn-outline-danger iot-btn" onclick="sendCommand('BUZZER')">Buzzer</button>
+      </div>
+      <button class="btn btn-secondary mt-4 w-100" onclick="logout()">Logout</button>
+    </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
-      from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getDatabase, ref, set } 
-      from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-    // Konfigurasi Firebase
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script>
+    // Ganti dengan config Firebase kamu
     const firebaseConfig = {
-      apiKey: "ISI_APIKEY_MU",
-      authDomain: "esp32-3a6dd.firebaseapp.com",
-      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/",
-      projectId: "esp32-3a6dd",
-      storageBucket: "esp32-3a6dd.appspot.com",
-      messagingSenderId: "ISI_SENDERID",
-      appId: "ISI_APPID"
+      apiKey: "YOUR-API-KEY",
+      authDomain: "YOUR-PROJECT.firebaseapp.com",
+      databaseURL: "https://esp8266-8353a-default-rtdb.firebaseio.com/",
+      projectId: "YOUR-PROJECT-ID",
+      storageBucket: "YOUR-PROJECT.appspot.com",
+      messagingSenderId: "SENDER-ID",
+      appId: "APP-ID"
     };
+    firebase.initializeApp(firebaseConfig);
 
-    // Inisialisasi Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+    const db = firebase.database();
+    const auth = firebase.auth();
 
-    // Elemen
-    const emailEl = document.getElementById("email");
-    const passEl = document.getElementById("password");
-    const outputEl = document.getElementById("output");
-    const loginBtn = document.getElementById("loginBtn");
-    const registerBtn = document.getElementById("registerBtn");
-
-    // Tombol daftar
-    registerBtn.addEventListener("click", () => {
-      const email = emailEl.value;
-      const password = passEl.value;
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          // Simpan data user di Realtime Database
-          set(ref(db, "users/" + user.uid), {
-            email: email,
-            createdAt: new Date().toISOString()
-          });
-          outputEl.style.color = "green";
-          outputEl.textContent = "Pendaftaran berhasil! Silakan login.";
+    // Login
+    function login() {
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(user => {
+          document.getElementById("loginPage").classList.add("hidden");
+          document.getElementById("panelPage").classList.remove("hidden");
+          document.getElementById("userName").innerText = email;
         })
-        .catch((error) => {
-          outputEl.style.color = "red";
-          outputEl.textContent = "Error: " + error.message;
-        });
-    });
+        .catch(err => alert(err.message));
+    }
 
-    // Tombol login
-    loginBtn.addEventListener("click", () => {
-      const email = emailEl.value;
-      const password = passEl.value;
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          outputEl.style.color = "green";
-          outputEl.textContent = "Login berhasil! UID: " + user.uid;
+    // Register
+    function register() {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const pass = document.getElementById('regPassword').value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(user => {
+          db.ref("users/" + user.user.uid).set({ name, email });
+          alert("Pendaftaran berhasil!");
+          showLogin();
         })
-        .catch((error) => {
-          outputEl.style.color = "red";
-          outputEl.textContent = "Error: " + error.message;
-        });
-    });
+        .catch(err => alert(err.message));
+    }
+
+    // Logout
+    function logout() {
+      auth.signOut().then(() => {
+        document.getElementById("panelPage").classList.add("hidden");
+        document.getElementById("loginPage").classList.remove("hidden");
+      });
+    }
+
+    // Kirim perintah IoT
+    function sendCommand(cmd) {
+      db.ref("commands").push({
+        device: cmd,
+        time: new Date().toISOString()
+      });
+      alert("Command " + cmd + " terkirim!");
+    }
+
+    // Ganti halaman
+    function showRegister() {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("registerPage").classList.remove("hidden");
+    }
+    function showLogin() {
+      document.getElementById("registerPage").classList.add("hidden");
+      document.getElementById("loginPage").classList.remove("hidden");
+    }
   </script>
 </body>
 </html>
