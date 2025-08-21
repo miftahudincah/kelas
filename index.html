@@ -1,144 +1,196 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>IoT Panel - Login & Register</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Bootstrap -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>IoT Panel</title>
   <style>
     body {
-      background: linear-gradient(135deg, #4a00e0, #8e2de2);
-      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #333;
+      margin: 0;
+      height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    .page { display: none; }
+    .active { display: block; }
+    h2 {
+      margin-bottom: 20px;
+      color: #2575fc;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button {
+      width: 95%;
+      padding: 12px;
+      margin: 12px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #2575fc;
       color: #fff;
+      transition: 0.3s;
     }
-    .card {
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    button:hover {
+      background: #1a5bd8;
     }
-    .hidden {
-      display: none;
+    a {
+      color: #2575fc;
+      cursor: pointer;
+      text-decoration: none;
     }
-    .iot-btn {
-      width: 100px;
-      height: 100px;
-      margin: 10px;
-      border-radius: 20px;
-      font-size: 20px;
+    a:hover {
+      text-decoration: underline;
+    }
+    #status {
+      font-weight: bold;
+      color: #6a11cb;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
   <div class="container">
-    <!-- LOGIN -->
-    <div id="loginPage" class="card p-4 text-dark">
-      <h2 class="text-center mb-3">Login IoT</h2>
-      <input type="email" id="loginEmail" class="form-control mb-3" placeholder="Email">
-      <input type="password" id="loginPassword" class="form-control mb-3" placeholder="Password">
-      <button class="btn btn-primary w-100" onclick="login()">Login</button>
-      <p class="mt-3 text-center">Belum punya akun? <a href="#" onclick="showRegister()">Register</a></p>
+    <h2>IoT Panel</h2>
+
+    <!-- Halaman Daftar -->
+    <div id="registerPage" class="page active">
+      <h3>Daftar Akun</h3>
+      <input type="text" id="regEmail" placeholder="Email"><br>
+      <input type="password" id="regPassword" placeholder="Password"><br>
+      <input type="text" id="regToken" placeholder="Token Acak (misal: token123)"><br>
+      <button onclick="registerUser()">Daftar</button>
+      <p>Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
     </div>
 
-    <!-- REGISTER -->
-    <div id="registerPage" class="card p-4 text-dark hidden">
-      <h2 class="text-center mb-3">Register Akun</h2>
-      <input type="text" id="regName" class="form-control mb-3" placeholder="Nama Lengkap">
-      <input type="email" id="regEmail" class="form-control mb-3" placeholder="Email">
-      <input type="password" id="regPassword" class="form-control mb-3" placeholder="Password">
-      <button class="btn btn-success w-100" onclick="register()">Daftar</button>
-      <p class="mt-3 text-center">Sudah punya akun? <a href="#" onclick="showLogin()">Login</a></p>
+    <!-- Halaman Login -->
+    <div id="loginPage" class="page">
+      <h3>Login</h3>
+      <input type="text" id="logEmail" placeholder="Email"><br>
+      <input type="password" id="logPassword" placeholder="Password"><br>
+      <button onclick="loginUser()">Login</button>
+      <p>Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
     </div>
 
-    <!-- PANEL -->
-    <div id="panelPage" class="card p-4 text-dark hidden">
-      <h2 class="text-center mb-3">IoT Control Panel</h2>
-      <p class="text-center">Halo, <span id="userName"></span>!</p>
-      <div class="d-flex justify-content-center flex-wrap">
-        <button class="btn btn-outline-primary iot-btn" onclick="sendCommand('LED1')">LED 1</button>
-        <button class="btn btn-outline-success iot-btn" onclick="sendCommand('LED2')">LED 2</button>
-        <button class="btn btn-outline-warning iot-btn" onclick="sendCommand('FAN')">FAN</button>
-        <button class="btn btn-outline-danger iot-btn" onclick="sendCommand('BUZZER')">Buzzer</button>
-      </div>
-      <button class="btn btn-secondary mt-4 w-100" onclick="logout()">Logout</button>
+    <!-- Halaman Panel IoT -->
+    <div id="panelPage" class="page">
+      <h3>Panel IoT</h3>
+      <p id="panelInfo"></p>
+      <button onclick="sendCommand('ON')">🔵 Hidupkan</button>
+      <button onclick="sendCommand('OFF')">⚪ Matikan</button>
+      <p>Status terakhir: <span id="status">-</span></p>
+      <button style="background:#ff4d4d" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script>
-    // Ganti dengan config Firebase kamu
+    // Konfigurasi Firebase
     const firebaseConfig = {
-      apiKey: "YOUR-API-KEY",
-      authDomain: "YOUR-PROJECT.firebaseapp.com",
-      databaseURL: "https://esp8266-8353a-default-rtdb.firebaseio.com/",
-      projectId: "YOUR-PROJECT-ID",
-      storageBucket: "YOUR-PROJECT.appspot.com",
-      messagingSenderId: "SENDER-ID",
-      appId: "APP-ID"
+      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/"
     };
     firebase.initializeApp(firebaseConfig);
-
     const db = firebase.database();
-    const auth = firebase.auth();
 
-    // Login
-    function login() {
-      const email = document.getElementById('loginEmail').value;
-      const pass = document.getElementById('loginPassword').value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(user => {
-          document.getElementById("loginPage").classList.add("hidden");
-          document.getElementById("panelPage").classList.remove("hidden");
-          document.getElementById("userName").innerText = email;
-        })
-        .catch(err => alert(err.message));
+    let currentUser = null;
+    let currentToken = null;
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
     }
 
-    // Register
-    function register() {
-      const name = document.getElementById('regName').value;
+    // Daftar User
+    function registerUser() {
       const email = document.getElementById('regEmail').value;
       const pass = document.getElementById('regPassword').value;
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(user => {
-          db.ref("users/" + user.user.uid).set({ name, email });
-          alert("Pendaftaran berhasil!");
-          showLogin();
-        })
-        .catch(err => alert(err.message));
-    }
+      const token = document.getElementById('regToken').value;
 
-    // Logout
-    function logout() {
-      auth.signOut().then(() => {
-        document.getElementById("panelPage").classList.add("hidden");
-        document.getElementById("loginPage").classList.remove("hidden");
+      if(!email || !pass || !token) {
+        alert("Lengkapi semua data!");
+        return;
+      }
+
+      const userId = email.replace(/\W/g, "_"); // jadikan key aman
+
+      db.ref("users/" + userId).set({
+        email: email,
+        password: pass,
+        token: token
+      }).then(()=>{
+        alert("Registrasi berhasil, silakan login.");
+        showPage("loginPage");
       });
     }
 
-    // Kirim perintah IoT
+    // Login User
+    function loginUser() {
+      const email = document.getElementById('logEmail').value;
+      const pass = document.getElementById('logPassword').value;
+      const userId = email.replace(/\W/g, "_");
+
+      db.ref("users/" + userId).get().then(snapshot=>{
+        if(snapshot.exists()) {
+          const data = snapshot.val();
+          if(data.password === pass) {
+            currentUser = email;
+            currentToken = data.token;
+            document.getElementById("panelInfo").innerText = "Login sebagai: " + email + " | Token: " + currentToken;
+            showPage("panelPage");
+
+            // pantau status panel
+            db.ref("panel/" + currentToken + "/status").on("value", snap=>{
+              document.getElementById("status").innerText = snap.val() || "-";
+            });
+          } else {
+            alert("Password salah!");
+          }
+        } else {
+          alert("User tidak ditemukan!");
+        }
+      });
+    }
+
+    // Kirim perintah ke panel sesuai token
     function sendCommand(cmd) {
-      db.ref("commands").push({
-        device: cmd,
-        time: new Date().toISOString()
-      });
-      alert("Command " + cmd + " terkirim!");
+      if(currentToken) {
+        db.ref("panel/" + currentToken).set({
+          status: cmd,
+          updatedBy: currentUser
+        });
+      }
     }
 
-    // Ganti halaman
-    function showRegister() {
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("registerPage").classList.remove("hidden");
-    }
-    function showLogin() {
-      document.getElementById("registerPage").classList.add("hidden");
-      document.getElementById("loginPage").classList.remove("hidden");
+    function logout() {
+      currentUser = null;
+      currentToken = null;
+      showPage("loginPage");
     }
   </script>
 </body>
-</html>
+                                                                         </html>
