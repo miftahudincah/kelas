@@ -1,166 +1,57 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Login & Daftar Firebase</title>
-<style>
-body { font-family: Arial; text-align:center; background:#f5f5f5; }
-.container { width:350px; margin:40px auto; padding:20px; background:#fff; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,.2);}
-h2 { color:#333; }
-input{width:90%;padding:10px;margin:5px 0;border-radius:5px;border:1px solid #ccc;}
-button{width:95%;padding:10px;border:none;border-radius:5px;background:#4CAF50;color:#fff;cursor:pointer;}
-button:hover{background:#45a049;}
-.link{color:blue;cursor:pointer;text-decoration:underline;font-size:14px;}
-#dashboard,#adminDashboard{display:none;}
-.tokenCard{border:1px solid #ddd;padding:10px;margin:5px;border-radius:5px;background:#fafafa;text-align:left;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lihat Data Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f9;
+    }
+    h1 {
+      color: #333;
+    }
+    pre {
+      background: #222;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 5px;
+      max-height: 400px;
+      overflow: auto;
+    }
+  </style>
 </head>
 <body>
+  <h1>Data dari Firebase</h1>
+  <pre id="output">Loading...</pre>
 
-<!-- Login -->
-<div class="container" id="loginPage">
-<h2>Login</h2>
-<input type="text" id="loginEmail" placeholder="Email"><br>
-<input type="password" id="loginPassword" placeholder="Password"><br>
-<button type="button" onclick="login()">Login</button>
-<p class="link" onclick="showPage('registerPage')">Daftar Akun</p>
-<p class="link" onclick="showPage('forgotPage')">Lupa Password?</p>
-</div>
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-<!-- Register -->
-<div class="container" id="registerPage" style="display:none;">
-<h2>Daftar</h2>
-<input type="text" id="regEmail" placeholder="Email"><br>
-<input type="password" id="regPassword" placeholder="Password"><br>
-<input type="text" id="regToken" placeholder="Token"><br>
-<button type="button" onclick="register()">Daftar</button>
-<p class="link" onclick="showPage('loginPage')">Sudah punya akun? Login</p>
-</div>
+    // Konfigurasi Firebase (pakai URL database yang kamu kasih)
+    const firebaseConfig = {
+      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/"
+    };
 
-<!-- Forgot Password -->
-<div class="container" id="forgotPage" style="display:none;">
-<h2>Lupa Password</h2>
-<input type="text" id="forgotEmail" placeholder="Email"><br>
-<input type="text" id="forgotX" placeholder="Kode X"><br>
-<button type="button" onclick="forgotPassword()">Reset Password</button>
-<p class="link" onclick="showPage('loginPage')">Kembali ke Login</p>
-</div>
+    // Inisialisasi Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-<!-- Dashboard User -->
-<div class="container" id="dashboard">
-<h2>Dashboard uuUser</h2>
-<p id="welcomeText"></p>
-<button type="button" onclick="logout()">Logout</button>
-</div>
+    // Referensi root database
+    const dbRef = ref(db, "/");
 
-<!-- Dashboard Admin -->
-<div class="container" id="adminDashboard">
-<h2>Dashboard Admin</h2>
-<div id="adminTokenList"></div>
-<button type="button" onclick="deleteAllUsers()">Hapus Semua User</button>
-<button type="button" onclick="logout()">Logout</button>
-</div>
-
-<script>
-const dbUrl = "https://esp8266-8353a-default-rtdb.firebaseio.com/";
-
-// Tampilkan halaman
-function showPage(pageId){
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("registerPage").style.display="none";
-  document.getElementById("forgotPage").style.display="none";
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("adminDashboard").style.display="none";
-  document.getElementById(pageId).style.display="block";
-}
-
-// Daftar user
-function register(){
-  const email = document.getElementById("regEmail").value;
-  const password = document.getElementById("regPassword").value;
-  const token = document.getElementById("regToken").value;
-  if(!email || !password || !token){ alert("Lengkapi data!"); return; }
-  const x = Math.random().toString(36).substring(2,8).toUpperCase();
-  const userId = email.replace(/\W/g,'');
-  fetch(`${dbUrl}/token/${token}/users/${userId}.json`,{
-    method:"PUT",
-    body: JSON.stringify({email,password,x})
-  }).then(()=>{ alert("Daftar berhasil! Kode X: "+x); showPage('loginPage'); });
-}
-
-// Login user / admin
-function login(){
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-
-  // Login Admin
-  if(email === "admin" && password === "123"){
-    showPage("adminDashboard");
-    loadAdmin();
-    return;
-  }
-
-  const userId = email.replace(/\W/g,'');
-  fetch(`${dbUrl}/token.json`).then(res=>res.json()).then(data=>{
-    let loggedIn = false;
-    for(let token in data){
-      if(data[token].users && data[token].users[userId] && data[token].users[userId].password===password){
-        loggedIn = true;
-        showPage("dashboard");
-        document.getElementById("welcomeText").innerText="Selamat datang "+email+" (Token: "+token+")";
-      }
-    }
-    if(!loggedIn) alert("Login gagal!");
-  });
-}
-
-// Lupa Password
-function forgotPassword(){
-  const email = document.getElementById("forgotEmail").value;
-  const kodeX = document.getElementById("forgotX").value;
-  const userId = email.replace(/\W/g,'');
-  fetch(`${dbUrl}/token.json`).then(res=>res.json()).then(data=>{
-    let found = false;
-    for(let token in data){
-      if(data[token].users && data[token].users[userId] && data[token].users[userId].x===kodeX){
-        found = true;
-        alert("Password anda: "+data[token].users[userId].password);
-      }
-    }
-    if(!found) alert("Data tidak cocok!");
-  });
-}
-
-// Logout
-function logout(){
-  showPage("loginPage");
-}
-
-// Load Admin Data
-function loadAdmin(){
-  fetch(`${dbUrl}/token.json`).then(res=>res.json()).then(data=>{
-    const adminList = document.getElementById("adminTokenList");
-    adminList.innerHTML = "";
-    for(let token in data){
-      if(data[token].users){
-        for(let u in data[token].users){
-          let div = document.createElement("div");
-          div.className="tokenCard";
-          div.innerHTML = `<b>Email:</b> ${data[token].users[u].email} <br> <b>Token:</b> ${token} <br> <b>Kode X:</b> ${data[token].users[u].x}`;
-          adminList.appendChild(div);
-        }
-      }
-    }
-  });
-}
-
-// Hapus semua user
-function deleteAllUsers(){
-  if(confirm("Hapus semua user?")){
-    fetch(`${dbUrl}/token.json`, {method:"DELETE"}).then(()=>{ alert("Semua user berhasil dihapus"); loadAdmin(); });
-  }
-}
-</script>
-
+    // Ambil data realtime
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }, (error) => {
+      document.getElementById("output").textContent = "Error: " + error.message;
+    });
+  </script>
 </body>
 </html>
