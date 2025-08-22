@@ -1,319 +1,242 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>IoT Dashboard</title>
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
-      color: #333;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      width: 100%;
-      max-width: 800px;
-      background: #fff;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      animation: fadeIn 0.8s ease-in-out;
-    }
-    h2 {
-      text-align: center;
-      color: #6a11cb;
-      margin-bottom: 20px;
-    }
-    h3 {
-      color: #2575fc;
-      text-align: center;
-    }
-    input {
-      width: 90%;
-      padding: 12px;
-      margin: 8px auto;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      display: block;
-      font-size: 14px;
-    }
-    button {
-      padding: 12px 18px;
-      margin: 8px 6px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    .btn-primary {
-      background: linear-gradient(135deg,#2575fc,#6a11cb);
-      color: #fff;
-    }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      opacity: 0.9;
-    }
-    .btn-danger {
-      background: #ff4d4d;
-      color: #fff;
-    }
-    .btn-danger:hover {
-      background: #e03b3b;
-    }
-    a { color: #2575fc; cursor: pointer; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .page { display: none; }
-    .active { display: block; }
-
-    /* Card Info */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-      gap: 15px;
-      margin: 15px 0;
-    }
-    .card {
-      background: #f8f9ff;
-      padding: 15px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .card span {
-      font-size: 22px;
-      font-weight: bold;
-      color: #2575fc;
-    }
-
-    canvas {
-      background: #fff;
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-
-    .btn-group { text-align: center; margin-top: 15px; }
-
-    .error {
-      color: red;
-      font-size: 13px;
-      text-align: center;
-      margin-top: -5px;
-      margin-bottom: 8px;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>IoT Dashboard</title>
+<style>
+body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#333; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+.container { width:100%; max-width:800px; background:#fff; padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); animation:fadeIn 0.8s ease-in-out; }
+h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
+h3 { color:#2575fc; text-align:center; }
+input { width:90%; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:14px; }
+button { padding:12px 18px; margin:8px 6px; border:none; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+.btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }
+.btn-primary:hover { transform:translateY(-2px); opacity:0.9; }
+.btn-danger { background:#ff4d4d; color:#fff; }
+.btn-danger:hover { background:#e03b3b; }
+a { color:#2575fc; cursor:pointer; text-decoration:none; }
+a:hover { text-decoration:underline; }
+.page { display:none; }
+.active { display:block; }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }
+.card { background:#f8f9ff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
+.card span { font-size:22px; font-weight:bold; color:#2575fc; }
+canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; }
+.btn-group { text-align:center; margin-top:15px; }
+.error { color:red; font-size:13px; text-align:center; margin-top:-5px; margin-bottom:8px; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h2 id="controllerTitle">⚡ IoT Dashboard</h2>
+<div class="container">
+  <h2 id="controllerTitle">⚡ IoT Dashboard</h2>
 
-    <!-- Register -->
-    <div id="registerPage" class="page active">
-      <h3>Daftar Akun</h3>
-      <input type="text" id="regEmail" placeholder="Email">
-      <div id="regEmailError" class="error"></div>
-      <input type="password" id="regPassword" placeholder="Password">
-      <input type="text" id="regToken" placeholder="Token Acak (misal: token123)">
-      <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
-      <div style="text-align:center;">
-        <button class="btn-primary" onclick="registerUser()">Daftar</button>
-      </div>
-      <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
+  <!-- Register -->
+  <div id="registerPage" class="page active">
+    <h3>Daftar Akun</h3>
+    <input type="text" id="regEmail" placeholder="Email">
+    <div id="regEmailError" class="error"></div>
+    <input type="password" id="regPassword" placeholder="Password">
+    <input type="text" id="regToken" placeholder="Token Acak (misal: token123)">
+    <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
+    <div style="text-align:center;">
+      <button class="btn-primary" onclick="registerUser()">Daftar</button>
     </div>
-
-    <!-- Login -->
-    <div id="loginPage" class="page">
-      <h3>Login</h3>
-      <input type="text" id="logEmail" placeholder="Email">
-      <input type="password" id="logPassword" placeholder="Password">
-      <div style="text-align:center;">
-        <button class="btn-primary" onclick="loginUser()">Login</button>
-      </div>
-      <p style="text-align:center;">Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
-      <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>
-    </div>
-
-    <!-- Panel -->
-    <div id="panelPage" class="page">
-      <h3 id="panelTitle">Panel IoT</h3>
-      <p id="panelInfo" style="text-align:center;"></p>
-
-      <div class="card-grid">
-        <div class="card">Status: <br><span id="status">-</span></div>
-        <div class="card">Voltage: <br><span id="voltageVal">0</span> V</div>
-        <div class="card">Ampere: <br><span id="ampereVal">0</span> A</div>
-      </div>
-
-      <canvas id="voltageChart"></canvas>
-      <canvas id="ampereChart"></canvas>
-
-      <div class="btn-group">
-        <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
-        <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
-        <button class="btn-primary" onclick="changeToken()">🔑 Ubah Token</button>
-        <button class="btn-danger" onclick="logout()">🚪 Logout</button>
-      </div>
-    </div>
+    <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
   </div>
 
-  <script>
-    const firebaseConfig = { 
-      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  <!-- Login -->
+  <div id="loginPage" class="page">
+    <h3>Login</h3>
+    <input type="text" id="logEmail" placeholder="Email">
+    <input type="password" id="logPassword" placeholder="Password">
+    <div style="text-align:center;">
+      <button class="btn-primary" onclick="loginUser()">Login</button>
+    </div>
+    <p style="text-align:center;">Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
+    <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>
+  </div>
 
-    let currentUser=null, currentToken=null;
-    let voltageChart=null, ampereChart=null;
-    let voltageData=[], voltageLabels=[];
-    let ampereData=[], ampereLabels=[];
+  <!-- Panel -->
+  <div id="panelPage" class="page">
+    <h3 id="panelTitle">Panel IoT</h3>
+    <p id="panelInfo" style="text-align:center;"></p>
 
-    function showPage(id){
-      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      if(id==="registerPage"){
-        document.getElementById("regEmailError").innerText="";
-      }
+    <div class="card-grid">
+      <div class="card">Status: <br><span id="status">-</span></div>
+      <div class="card">Voltage: <br><span id="voltageVal">0</span> V</div>
+      <div class="card">Ampere: <br><span id="ampereVal">0</span> A</div>
+    </div>
+
+    <canvas id="voltageChart"></canvas>
+    <canvas id="ampereChart"></canvas>
+
+    <div class="btn-group">
+      <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
+      <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+      <button class="btn-primary" onclick="changeToken()">🔑 Ubah Token</button>
+      <button class="btn-danger" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let currentUser=null, currentToken=null;
+let voltageChart=null, ampereChart=null;
+let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
+let panelRef=null;
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==="registerPage") document.getElementById("regEmailError").innerText="";
+}
+
+function isValidEmail(email){ return email.includes('@') && email.includes('.'); }
+
+function registerUser(){
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPassword').value.trim();
+  const token=document.getElementById('regToken').value.trim();
+  const ibu=document.getElementById('regIbu').value.trim();
+  const errorBox=document.getElementById("regEmailError");
+  errorBox.innerText="";
+  if(!email||!pass||!token||!ibu){ alert("Lengkapi semua data!"); return; }
+  if(!isValidEmail(email)){ errorBox.innerText="Format email tidak valid!"; return; }
+  const userId=email.replace(/\W/g,"_");
+  db.ref("users/"+userId).get().then(snap=>{
+    if(snap.exists()){ errorBox.innerText="Email sudah terpakai!"; }
+    else { db.ref("users/"+userId).set({email,password:pass,token,ibu}).then(()=>{ alert("Registrasi berhasil."); showPage("loginPage"); }); }
+  });
+}
+
+function loginUser(){
+  const email=document.getElementById('logEmail').value;
+  const pass=document.getElementById('logPassword').value;
+  const userId=email.replace(/\W/g,"_");
+  db.ref("users/"+userId).get().then(snap=>{
+    if(snap.exists()){
+      const data=snap.val();
+      if(data.password===pass){
+        currentUser=email; currentToken=data.token;
+        document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken;
+        document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
+        document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
+        showPage("panelPage");
+        resetCharts();
+        setupCharts();
+        listenPanel();
+      } else alert("Password salah!");
+    } else alert("User tidak ditemukan!");
+  });
+}
+
+function listenPanel(){
+  if(panelRef) panelRef.off();
+  panelRef = db.ref("panel/"+currentToken);
+  panelRef.on("value", snap=>{
+    const d = snap.val();
+    if(!d){
+      document.getElementById("status").innerText="-";
+      document.getElementById("voltageVal").innerText=0;
+      document.getElementById("ampereVal").innerText=0;
+      return;
     }
-    function isValidEmail(email){ return email.includes('@') && email.includes('.'); }
+    document.getElementById("status").innerText=d.status||"-";
+    document.getElementById("voltageVal").innerText=d.voltage||0;
+    document.getElementById("ampereVal").innerText=d.ampere||0;
+    addData(voltageChart, voltageData, voltageLabels, d.voltage||0);
+    addData(ampereChart, ampereData, ampereLabels, d.ampere||0);
+  });
+}
 
-    function registerUser(){
-      const email=document.getElementById('regEmail').value.trim();
-      const pass=document.getElementById('regPassword').value.trim();
-      const token=document.getElementById('regToken').value.trim();
-      const ibu=document.getElementById('regIbu').value.trim();
-      const errorBox=document.getElementById("regEmailError");
-      errorBox.innerText="";
+function sendCommand(cmd){
+  if(currentToken){
+    db.ref("panel/"+currentToken).update({
+      status:cmd,
+      updatedBy:currentUser,
+      updatedAt:new Date().toLocaleString()
+    });
+  }
+}
 
-      if(!email||!pass||!token||!ibu){ alert("Lengkapi semua data!"); return; }
-      if(!isValidEmail(email)){ errorBox.innerText="Format email tidak valid!"; return; }
+function logout(){
+  currentUser=null; currentToken=null;
+  if(voltageChart) voltageChart.destroy();
+  if(ampereChart) ampereChart.destroy();
+  if(panelRef) panelRef.off();
+  showPage("loginPage");
+}
 
-      const userId=email.replace(/\W/g,"_");
+function forgotPassword(){
+  const email=prompt("Masukkan email Anda:");
+  const ibu=prompt("Masukkan nama ibu kandung:");
+  const userId=email.replace(/\W/g,"_");
+  db.ref("users/"+userId).get().then(snap=>{
+    if(snap.exists()){
+      const data=snap.val();
+      if(data.ibu && data.ibu.toLowerCase()===ibu.toLowerCase()){
+        const newPass=prompt("Jawaban benar. Masukkan password baru:");
+        if(newPass) db.ref("users/"+userId+"/password").set(newPass).then(()=>alert("Password berhasil direset."));
+      } else alert("Jawaban salah!");
+    } else alert("User tidak ditemukan!");
+  });
+}
 
-      db.ref("users/"+userId).get().then(snap=>{
-        if(snap.exists()){
-          errorBox.innerText="Email sudah terpakai!";
-        } else {
-          db.ref("users/"+userId).set({ email, password:pass, token, ibu })
-          .then(()=>{ alert("Registrasi berhasil."); showPage("loginPage"); });
-        }
-      });
-    }
+function changeToken(){
+  if(!currentUser){ alert("Login dulu!"); return; }
+  const newToken=prompt("Masukkan token baru:");
+  if(newToken && newToken.trim()!==""){
+    const userId=currentUser.replace(/\W/g,"_");
+    db.ref("users/"+userId+"/token").set(newToken).then(()=>{
+      currentToken=newToken;
+      resetCharts();
+      setupCharts();
+      document.getElementById("panelInfo").innerText="Login sebagai: "+currentUser+" | Token: "+currentToken;
+      document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
+      document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
+      listenPanel();
+      alert("Token berhasil diubah!");
+    });
+  }
+}
 
-    function loginUser(){
-      const email=document.getElementById('logEmail').value;
-      const pass=document.getElementById('logPassword').value;
-      const userId=email.replace(/\W/g,"_");
-      db.ref("users/"+userId).get().then(snap=>{
-        if(snap.exists()){
-          const data=snap.val();
-          if(data.password===pass){
-            currentUser=email; currentToken=data.token;
-            document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken;
-            document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
-            document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
-            showPage("panelPage");
-            setupCharts();
-            listenPanel();
-          } else alert("Password salah!");
-        } else alert("User tidak ditemukan!");
-      });
-    }
+function resetCharts(){
+  voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[];
+  if(voltageChart) voltageChart.destroy();
+  if(ampereChart) ampereChart.destroy();
+}
 
-    function listenPanel(){
-      db.ref("panel/"+currentToken).on("value",snap=>{
-        const d=snap.val()||{};
-        document.getElementById("status").innerText=d.status||"-";
-        document.getElementById("voltageVal").innerText=d.voltage||0;
-        document.getElementById("ampereVal").innerText=d.ampere||0;
-        addData(voltageChart,voltageData,voltageLabels,d.voltage||0,"Voltage");
-        addData(ampereChart,ampereData,ampereLabels,d.ampere||0,"Ampere");
-      });
-    }
+function setupCharts(){
+  if(!voltageChart){
+    voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{
+      type:'line',
+      data:{labels:voltageLabels, datasets:[{label:'Voltage', data:voltageData, borderColor:'#2575fc', backgroundColor:'rgba(37,117,252,0.2)', tension:0.3}]},
+      options:{responsive:true, scales:{y:{beginAtZero:true}}}
+    });
+  }
+  if(!ampereChart){
+    ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{
+      type:'line',
+      data:{labels:ampereLabels, datasets:[{label:'Ampere', data:ampereData, borderColor:'#ff9500', backgroundColor:'rgba(255,149,0,0.2)', tension:0.3}]},
+      options:{responsive:true, scales:{y:{beginAtZero:true}}}
+    });
+  }
+}
 
-    function sendCommand(cmd){
-      if(currentToken){
-        db.ref("panel/"+currentToken).update({
-          status:cmd,updatedBy:currentUser,updatedAt:new Date().toLocaleString()
-        });
-      }
-    }
-
-    function logout(){
-      currentUser=null; currentToken=null;
-      if(voltageChart) voltageChart.destroy();
-      if(ampereChart) ampereChart.destroy();
-      showPage("loginPage");
-    }
-
-    function forgotPassword(){
-      const email=prompt("Masukkan email Anda:");
-      const ibu=prompt("Masukkan nama ibu kandung:");
-      const userId=email.replace(/\W/g,"_");
-      db.ref("users/"+userId).get().then(snap=>{
-        if(snap.exists()){
-          const data=snap.val();
-          if(data.ibu && data.ibu.toLowerCase()===ibu.toLowerCase()){
-            const newPass=prompt("Jawaban benar. Masukkan password baru:");
-            if(newPass) db.ref("users/"+userId+"/password").set(newPass).then(()=>alert("Password berhasil direset."));
-          } else alert("Jawaban salah!");
-        } else alert("User tidak ditemukan!");
-      });
-    }
-
-    function changeToken(){
-      if(!currentUser){ alert("Login dulu!"); return; }
-      const newToken=prompt("Masukkan token baru:");
-      if(newToken && newToken.trim()!==""){
-        const userId=currentUser.replace(/\W/g,"_");
-        db.ref("users/"+userId+"/token").set(newToken).then(()=>{
-          currentToken=newToken;
-          document.getElementById("panelInfo").innerText="Login sebagai: "+currentUser+" | Token: "+currentToken;
-          document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
-          document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
-          alert("Token berhasil diubah!");
-          listenPanel();
-        });
-      }
-    }
-
-    function setupCharts(){
-      if(!voltageChart){
-        voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{
-          type:'line',
-          data:{labels:voltageLabels,datasets:[{label:'Voltage',data:voltageData,borderColor:'#2575fc',backgroundColor:'rgba(37,117,252,0.2)',tension:0.3}]},
-          options:{responsive:true,scales:{y:{beginAtZero:true}}}
-        });
-      }
-      if(!ampereChart){
-        ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{
-          type:'line',
-          data:{labels:ampereLabels,datasets:[{label:'Ampere',data:ampereData,borderColor:'#ff9500',backgroundColor:'rgba(255,149,0,0.2)',tension:0.3}]},
-          options:{responsive:true,scales:{y:{beginAtZero:true}}}
-        });
-      }
-    }
-
-    function addData(chart,dataArr,labelArr,value,label){
-      const now=new Date().toLocaleTimeString();
-      dataArr.push(value); labelArr.push(now);
-      if(dataArr.length>10){dataArr.shift();labelArr.shift();}
-      chart.update();
-    }
-  </script>
+function addData(chart, dataArr, labelArr, value){
+  const now=new Date().toLocaleTimeString();
+  dataArr.push(value); labelArr.push(now);
+  if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
+  chart.update();
+}
+</script>
 </body>
-</html>
+                                  </html>
