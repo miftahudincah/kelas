@@ -66,18 +66,22 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <p id="panelInfo" style="text-align:center;"></p>
 
     <div class="card-grid">
-      <div class="card">Status: <br><span id="status">-</span></div>
       <div class="card">Voltage: <br><span id="voltageVal">0</span> V</div>
       <div class="card">Ampere: <br><span id="ampereVal">0</span> A</div>
     </div>
+
+    <!-- Daftar user token hanya admin -->
+    <h3 id="userListTitle" style="display:none;">Pengguna Token Ini</h3>
+    <div id="userList" class="card-grid"></div>
 
     <canvas id="voltageChart"></canvas>
     <canvas id="ampereChart"></canvas>
 
     <div class="btn-group">
-      <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
-      <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+      <button id="btnOn" class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
+      <button id="btnOff" class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
       <button class="btn-primary" onclick="changeToken()">🔑 Ubah Token</button>
+      <button class="btn-primary" id="setAdminBtn" onclick="setAdmin()">⭐ Set Admin</button>
       <button class="btn-danger" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
@@ -88,7 +92,7 @@ const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.c
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
-let currentUser=null, currentToken=null;
+let currentUser=null, currentToken=null, isAdmin=false;
 let voltageChart=null, ampereChart=null;
 let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
 let panelRef=null;
@@ -113,7 +117,12 @@ function registerUser(){
   const userId=email.replace(/\W/g,"_");
   db.ref("users/"+userId).get().then(snap=>{
     if(snap.exists()){ errorBox.innerText="Email sudah terpakai!"; }
-    else { db.ref("users/"+userId).set({email,password:pass,token,ibu}).then(()=>{ alert("Registrasi berhasil."); showPage("loginPage"); }); }
+    else { 
+      db.ref("users/"+userId).set({email,password:pass,token,ibu,isAdmin:false}).then(()=>{
+        alert("Registrasi berhasil."); 
+        showPage("loginPage"); 
+      }); 
+    }
   });
 }
 
@@ -125,17 +134,44 @@ function loginUser(){
     if(snap.exists()){
       const data=snap.val();
       if(data.password===pass){
-        currentUser=email; currentToken=data.token;
-        document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken;
+        currentUser=email; 
+        currentToken=data.token;
+        isAdmin = data.isAdmin || false;
+        document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken + (isAdmin ? " | Admin" : "");
         document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
         document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
         showPage("panelPage");
         resetCharts();
         setupCharts();
         listenPanel();
+        loadUsersByToken();
+        updateAdminUI();
       } else alert("Password salah!");
     } else alert("User tidak ditemukan!");
   });
+}
+
+function updateAdminUI(){
+  document.getElementById("btnOn").style.display = isAdmin ? "inline-block" : "none";
+  document.getElementById("btnOff").style.display = isAdmin ? "inline-block" : "none";
+  document.getElementById("userListTitle").style.display = isAdmin ? "block" : "none";
+  document.getElementById("setAdminBtn").style.display = isAdmin ? "none" : "inline-block";
+}
+
+function setAdmin(){
+  const input = prompt("Masukkan password untuk menjadi admin:");
+  if(input === "123"){
+    const userId = currentUser.replace(/\W/g,"_");
+    db.ref("users/"+userId+"/isAdmin").set(true).then(()=>{
+      alert("Sekarang Anda admin untuk token ini!");
+      isAdmin = true;
+      updateAdminUI();
+      document.getElementById("panelInfo").innerText += " | Admin";
+      loadUsersByToken();
+    });
+  } else {
+    alert("Password salah!");
+  }
 }
 
 function listenPanel(){
@@ -144,12 +180,10 @@ function listenPanel(){
   panelRef.on("value", snap=>{
     const d = snap.val();
     if(!d){
-      document.getElementById("status").innerText="-";
       document.getElementById("voltageVal").innerText=0;
       document.getElementById("ampereVal").innerText=0;
       return;
     }
-    document.getElementById("status").innerText=d.status||"-";
     document.getElementById("voltageVal").innerText=d.voltage||0;
     document.getElementById("ampereVal").innerText=d.ampere||0;
     addData(voltageChart, voltageData, voltageLabels, d.voltage||0);
@@ -158,17 +192,17 @@ function listenPanel(){
 }
 
 function sendCommand(cmd){
-  if(currentToken){
+  if(currentToken && isAdmin){
     db.ref("panel/"+currentToken).update({
       status:cmd,
       updatedBy:currentUser,
       updatedAt:new Date().toLocaleString()
     });
-  }
+  } else alert("Hanya admin yang bisa mengontrol ON/OFF!");
 }
 
 function logout(){
-  currentUser=null; currentToken=null;
+  currentUser=null; currentToken=null; isAdmin=false;
   if(voltageChart) voltageChart.destroy();
   if(ampereChart) ampereChart.destroy();
   if(panelRef) panelRef.off();
@@ -195,15 +229,18 @@ function changeToken(){
   const newToken=prompt("Masukkan token baru:");
   if(newToken && newToken.trim()!==""){
     const userId=currentUser.replace(/\W/g,"_");
-    db.ref("users/"+userId+"/token").set(newToken).then(()=>{
+    db.ref("users/"+userId).update({token:newToken, isAdmin:false}).then(()=>{
       currentToken=newToken;
+      isAdmin = false;
       resetCharts();
       setupCharts();
       document.getElementById("panelInfo").innerText="Login sebagai: "+currentUser+" | Token: "+currentToken;
       document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
       document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
       listenPanel();
-      alert("Token berhasil diubah!");
+      loadUsersByToken();
+      updateAdminUI();
+      alert("Token berhasil diubah! Admin hanya berlaku di token yang telah di-set.");
     });
   }
 }
@@ -237,6 +274,25 @@ function addData(chart, dataArr, labelArr, value){
   if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
   chart.update();
 }
+
+function loadUsersByToken(){
+  const listEl = document.getElementById("userList");
+  listEl.innerHTML = "";
+  if(!isAdmin) return; // hanya admin
+  db.ref("users").get().then(snap=>{
+    if(snap.exists()){
+      const users = snap.val();
+      for(const key in users){
+        if(users[key].token === currentToken){
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerText = users[key].email;
+          listEl.appendChild(card);
+        }
+      }
+    }
+  });
+}
 </script>
 </body>
-                                  </html>
+</html>
