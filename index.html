@@ -9,26 +9,29 @@
       background: linear-gradient(135deg, #6a11cb, #2575fc);
       color: #333;
       margin: 0;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 700px;
       background: #fff;
       padding: 25px;
       border-radius: 15px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      text-align: center;
       animation: fadeIn 0.8s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .page { display: none; }
+    .page { display: none; width: 100%; }
     .active { display: block; }
-    h2 { margin-bottom: 20px; color: #2575fc; }
+    h2, h3 { color: #2575fc; text-align: center; }
     input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-    button { padding: 12px; margin: 12px 5px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    button { padding: 12px; margin: 10px 5px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
     .btn-primary { background: #2575fc; color: #fff; }
     .btn-primary:hover { background: #1a5bd8; }
     .btn-danger { background: #ff4d4d; color: #fff; }
@@ -36,10 +39,10 @@
     a { color: #2575fc; cursor: pointer; text-decoration: none; }
     a:hover { text-decoration: underline; }
     #status, #valueX { font-weight: bold; color: #6a11cb; }
-    canvas { margin-top: 20px; }
+    canvas { margin-top: 20px; width: 100% !important; height: 200px !important; }
     .info { font-size: 14px; color: #ff4d4d; font-weight: bold; margin-top: 10px; }
-    .btn-group { display: flex; justify-content: center; flex-wrap: wrap; }
-    .value-x-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
+    .btn-group { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 15px; gap: 10px; }
+    .value-x-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -75,21 +78,24 @@
     <div id="panelPage" class="page">
       <h3 id="panelTitle">Panel IoT</h3>
       <p id="panelInfo"></p>
-      <div class="btn-group">
-        <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
-        <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
-      </div>
-      <p>Status terakhir: <span id="status">-</span></p>
 
-      <!-- Nilai X dengan tombol Refresh -->
+      <!-- Grafik di atas -->
+      <canvas id="voltageChart"></canvas>
+      <canvas id="ampereChart"></canvas>
+
+      <!-- Status & Nilai X -->
+      <p>Status terakhir: <span id="status">-</span></p>
       <div class="value-x-container">
         <span>Nilai X: <span id="valueX">-</span></span>
         <button class="btn-primary" onclick="refreshX()">🔄 Refresh</button>
       </div>
 
-      <canvas id="voltageChart" width="400" height="200"></canvas>
-      <canvas id="ampereChart" width="400" height="200"></canvas>
-      <button class="btn-danger" onclick="logout()">🚪 Logout</button>
+      <!-- Tombol panel di bawah -->
+      <div class="btn-group">
+        <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
+        <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+        <button class="btn-danger" onclick="logout()">🚪 Logout</button>
+      </div>
     </div>
   </div>
 
