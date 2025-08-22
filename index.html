@@ -28,13 +28,18 @@
     .active { display: block; }
     h2 { margin-bottom: 20px; color: #2575fc; }
     input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-    button { width: 95%; padding: 12px; margin: 12px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; background: #2575fc; color: #fff; transition: 0.3s; }
-    button:hover { background: #1a5bd8; }
+    button { padding: 12px; margin: 12px 5px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn-primary { background: #2575fc; color: #fff; }
+    .btn-primary:hover { background: #1a5bd8; }
+    .btn-danger { background: #ff4d4d; color: #fff; }
+    .btn-danger:hover { background: #e03b3b; }
     a { color: #2575fc; cursor: pointer; text-decoration: none; }
     a:hover { text-decoration: underline; }
     #status, #valueX { font-weight: bold; color: #6a11cb; }
     canvas { margin-top: 20px; }
     .info { font-size: 14px; color: #ff4d4d; font-weight: bold; margin-top: 10px; }
+    .btn-group { display: flex; justify-content: center; flex-wrap: wrap; }
+    .value-x-container { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -51,7 +56,7 @@
       <input type="text" id="regEmail" placeholder="Email"><br>
       <input type="password" id="regPassword" placeholder="Password"><br>
       <input type="text" id="regToken" placeholder="Token Acak (misal: token123)"><br>
-      <button onclick="registerUser()">Daftar</button>
+      <button class="btn-primary" onclick="registerUser()">Daftar</button>
       <p>Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
     </div>
 
@@ -60,7 +65,7 @@
       <h3>Login</h3>
       <input type="text" id="logEmail" placeholder="Email"><br>
       <input type="password" id="logPassword" placeholder="Password"><br>
-      <button onclick="loginUser()">Login</button>
+      <button class="btn-primary" onclick="loginUser()">Login</button>
       <p>Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
       <p><a onclick="forgotPassword()">Lupa Password?</a></p>
       <p class="info">Simpan data x ini jika Anda lupa password</p>
@@ -70,13 +75,21 @@
     <div id="panelPage" class="page">
       <h3 id="panelTitle">Panel IoT</h3>
       <p id="panelInfo"></p>
-      <button onclick="sendCommand('ON')">🔵 ON</button>
-      <button onclick="sendCommand('OFF')">⚪ OFF</button>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
+        <button class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+      </div>
       <p>Status terakhir: <span id="status">-</span></p>
-      <p>Nilai X: <span id="valueX">-</span></p>
+
+      <!-- Nilai X dengan tombol Refresh -->
+      <div class="value-x-container">
+        <span>Nilai X: <span id="valueX">-</span></span>
+        <button class="btn-primary" onclick="refreshX()">🔄 Refresh</button>
+      </div>
+
       <canvas id="voltageChart" width="400" height="200"></canvas>
       <canvas id="ampereChart" width="400" height="200"></canvas>
-      <button style="background:#ff4d4d" onclick="logout()">🚪 Logout</button>
+      <button class="btn-danger" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 
@@ -98,10 +111,8 @@
       const email = document.getElementById('regEmail').value;
       const pass = document.getElementById('regPassword').value;
       const token = document.getElementById('regToken').value;
-
       if(!email||!pass||!token){ alert("Lengkapi semua data!"); return; }
       if(!isValidEmail(email)){ alert("Email tidak valid!"); return; }
-
       const userId = email.replace(/\W/g,"_");
       db.ref("users/"+userId).set({email, password: pass, token}).then(()=>{ alert("Registrasi berhasil."); showPage("loginPage"); });
     }
@@ -110,24 +121,20 @@
       const email = document.getElementById('logEmail').value;
       const pass = document.getElementById('logPassword').value;
       const userId = email.replace(/\W/g,"_");
-
       db.ref("users/"+userId).get().then(snap=>{
         if(snap.exists()){
           const data = snap.val();
           if(data.password===pass){
             currentUser=email; currentToken=data.token;
-
             document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken;
             document.getElementById("controllerTitle").innerText="IoT Dashboard - "+currentToken;
             document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
             showPage("panelPage");
 
-            // Pantau status, x, dan grafik
             db.ref("panel/"+currentToken).on("value", snap=>{
               const data = snap.val() || {};
               document.getElementById("status").innerText = data.status || "-";
-              document.getElementById("valueX").innerText = data.x || "-"; // X tetap sama
-
+              document.getElementById("valueX").innerText = data.x || "0";
               addData(voltageChart, voltageData, voltageLabels, data.voltage||0, "Voltage");
               addData(ampereChart, ampereData, ampereLabels, data.ampere||0, "Ampere");
             });
@@ -138,13 +145,24 @@
       });
     }
 
+    function refreshX(){
+      if(currentToken){
+        const newX = prompt("Masukkan nilai X baru:");
+        if(newX!==null && newX!==""){
+          db.ref("panel/"+currentToken+"/x").set(newX).then(()=>{
+            document.getElementById("valueX").innerText = newX;
+            alert("Nilai X berhasil diperbarui.");
+          });
+        }
+      }
+    }
+
     function sendCommand(cmd){
       if(currentToken){ db.ref("panel/"+currentToken).update({status: cmd, updatedBy: currentUser}); }
     }
 
     function logout(){
       currentUser=null; currentToken=null;
-      // jangan reset data grafik agar grafik tetap ada
       if(voltageChart) voltageChart.destroy();
       if(ampereChart) ampereChart.destroy();
       voltageChart=null; ampereChart=null;
@@ -156,7 +174,6 @@
       const xInput = prompt("Masukkan nilai X yang ingin disimpan:");
       if(!email||!xInput||!isValidEmail(email)){ alert("Email atau X tidak valid!"); return; }
       const userId = email.replace(/\W/g,"_");
-
       db.ref("users/"+userId).get().then(snap=>{
         if(snap.exists()){
           const token = snap.val().token;
