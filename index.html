@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>IoT Panel</title>
+  <title>IoT Dashboard</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,7 +16,7 @@
     }
     .container {
       width: 100%;
-      max-width: 400px;
+      max-width: 600px;
       background: #fff;
       padding: 25px;
       border-radius: 15px;
@@ -27,57 +26,24 @@
     }
     .page { display: none; }
     .active { display: block; }
-    h2 {
-      margin-bottom: 20px;
-      color: #2575fc;
-    }
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    button {
-      width: 95%;
-      padding: 12px;
-      margin: 12px 0;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      background: #2575fc;
-      color: #fff;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #1a5bd8;
-    }
-    a {
-      color: #2575fc;
-      cursor: pointer;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    #status {
-      font-weight: bold;
-      color: #6a11cb;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    h2 { margin-bottom: 20px; color: #2575fc; }
+    input { width: 90%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+    button { width: 95%; padding: 12px; margin: 12px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; background: #2575fc; color: #fff; transition: 0.3s; }
+    button:hover { background: #1a5bd8; }
+    a { color: #2575fc; cursor: pointer; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    #status, #valueX { font-weight: bold; color: #6a11cb; }
+    canvas { margin-top: 20px; }
+    .info { font-size: 14px; color: #ff4d4d; font-weight: bold; margin-top: 10px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
-    <h2>IoT Panel</h2>
+    <h2 id="controllerTitle">IoT Dashboard</h2>
 
     <!-- Halaman Daftar -->
     <div id="registerPage" class="page active">
@@ -96,101 +62,133 @@
       <input type="password" id="logPassword" placeholder="Password"><br>
       <button onclick="loginUser()">Login</button>
       <p>Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
+      <p><a onclick="forgotPassword()">Lupa Password?</a></p>
+      <p class="info">Simpan data x ini jika Anda lupa password</p>
     </div>
 
-    <!-- Halaman Panel IoT -->
+    <!-- Panel IoT -->
     <div id="panelPage" class="page">
-      <h3>Panel IoT</h3>
+      <h3 id="panelTitle">Panel IoT</h3>
       <p id="panelInfo"></p>
-      <button onclick="sendCommand('ON')">🔵 Hidupkan</button>
-      <button onclick="sendCommand('OFF')">⚪ Matikan</button>
+      <button onclick="sendCommand('ON')">🔵 ON</button>
+      <button onclick="sendCommand('OFF')">⚪ OFF</button>
       <p>Status terakhir: <span id="status">-</span></p>
+      <p>Nilai X: <span id="valueX">-</span></p>
+      <canvas id="voltageChart" width="400" height="200"></canvas>
+      <canvas id="ampereChart" width="400" height="200"></canvas>
       <button style="background:#ff4d4d" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 
   <script>
-    // Konfigurasi Firebase
-    const firebaseConfig = {
-      databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/"
-    };
+    const firebaseConfig = { databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let currentUser = null;
     let currentToken = null;
+    let voltageChart = null, ampereChart = null;
+    let voltageData = [], voltageLabels = [];
+    let ampereData = [], ampereLabels = [];
 
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
+    function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    function isValidEmail(email){ return email.includes('@') && email.includes('.co'); }
 
-    // Daftar User
-    function registerUser() {
+    function registerUser(){
       const email = document.getElementById('regEmail').value;
       const pass = document.getElementById('regPassword').value;
       const token = document.getElementById('regToken').value;
 
-      if(!email || !pass || !token) {
-        alert("Lengkapi semua data!");
-        return;
-      }
+      if(!email||!pass||!token){ alert("Lengkapi semua data!"); return; }
+      if(!isValidEmail(email)){ alert("Email tidak valid!"); return; }
 
-      const userId = email.replace(/\W/g, "_"); // jadikan key aman
-
-      db.ref("users/" + userId).set({
-        email: email,
-        password: pass,
-        token: token
-      }).then(()=>{
-        alert("Registrasi berhasil, silakan login.");
-        showPage("loginPage");
-      });
+      const userId = email.replace(/\W/g,"_");
+      db.ref("users/"+userId).set({email, password: pass, token}).then(()=>{ alert("Registrasi berhasil."); showPage("loginPage"); });
     }
 
-    // Login User
-    function loginUser() {
+    function loginUser(){
       const email = document.getElementById('logEmail').value;
       const pass = document.getElementById('logPassword').value;
-      const userId = email.replace(/\W/g, "_");
+      const userId = email.replace(/\W/g,"_");
 
-      db.ref("users/" + userId).get().then(snapshot=>{
-        if(snapshot.exists()) {
-          const data = snapshot.val();
-          if(data.password === pass) {
-            currentUser = email;
-            currentToken = data.token;
-            document.getElementById("panelInfo").innerText = "Login sebagai: " + email + " | Token: " + currentToken;
+      db.ref("users/"+userId).get().then(snap=>{
+        if(snap.exists()){
+          const data = snap.val();
+          if(data.password===pass){
+            currentUser=email; currentToken=data.token;
+
+            document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken;
+            document.getElementById("controllerTitle").innerText="IoT Dashboard - "+currentToken;
+            document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
             showPage("panelPage");
 
-            // pantau status panel
-            db.ref("panel/" + currentToken + "/status").on("value", snap=>{
-              document.getElementById("status").innerText = snap.val() || "-";
+            // Pantau status, x, dan grafik
+            db.ref("panel/"+currentToken).on("value", snap=>{
+              const data = snap.val() || {};
+              document.getElementById("status").innerText = data.status || "-";
+              document.getElementById("valueX").innerText = data.x || "-"; // X tetap sama
+
+              addData(voltageChart, voltageData, voltageLabels, data.voltage||0, "Voltage");
+              addData(ampereChart, ampereData, ampereLabels, data.ampere||0, "Ampere");
             });
-          } else {
-            alert("Password salah!");
-          }
-        } else {
-          alert("User tidak ditemukan!");
-        }
+
+            setupCharts();
+          } else { alert("Password salah!"); }
+        } else { alert("User tidak ditemukan!"); }
       });
     }
 
-    // Kirim perintah ke panel sesuai token
-    function sendCommand(cmd) {
-      if(currentToken) {
-        db.ref("panel/" + currentToken).set({
-          status: cmd,
-          updatedBy: currentUser
+    function sendCommand(cmd){
+      if(currentToken){ db.ref("panel/"+currentToken).update({status: cmd, updatedBy: currentUser}); }
+    }
+
+    function logout(){
+      currentUser=null; currentToken=null;
+      // jangan reset data grafik agar grafik tetap ada
+      if(voltageChart) voltageChart.destroy();
+      if(ampereChart) ampereChart.destroy();
+      voltageChart=null; ampereChart=null;
+      showPage("loginPage");
+    }
+
+    function forgotPassword(){
+      const email = prompt("Masukkan email untuk reset password:");
+      const xInput = prompt("Masukkan nilai X yang ingin disimpan:");
+      if(!email||!xInput||!isValidEmail(email)){ alert("Email atau X tidak valid!"); return; }
+      const userId = email.replace(/\W/g,"_");
+
+      db.ref("users/"+userId).get().then(snap=>{
+        if(snap.exists()){
+          const token = snap.val().token;
+          db.ref("panel/"+token+"/x").set(xInput).then(()=>{ alert("Nilai X telah disimpan di panel."); });
+        } else { alert("User tidak ditemukan!"); }
+      });
+    }
+
+    function setupCharts(){
+      if(!voltageChart){
+        const ctxV = document.getElementById('voltageChart').getContext('2d');
+        voltageChart = new Chart(ctxV, {
+          type:'line', data:{labels:voltageLabels, datasets:[{label:'Voltage', data:voltageData, borderColor:'#2575fc', backgroundColor:'rgba(37,117,252,0.2)', tension:0.3}]},
+          options:{responsive:true, scales:{y:{beginAtZero:true}}}
+        });
+      }
+      if(!ampereChart){
+        const ctxA = document.getElementById('ampereChart').getContext('2d');
+        ampereChart = new Chart(ctxA, {
+          type:'line', data:{labels:ampereLabels, datasets:[{label:'Ampere', data:ampereData, borderColor:'#ff9500', backgroundColor:'rgba(255,149,0,0.2)', tension:0.3}]},
+          options:{responsive:true, scales:{y:{beginAtZero:true}}}
         });
       }
     }
 
-    function logout() {
-      currentUser = null;
-      currentToken = null;
-      showPage("loginPage");
+    function addData(chart, dataArr, labelArr, value, keyLabel){
+      const now = new Date().toLocaleTimeString();
+      dataArr.push(value); labelArr.push(now);
+      chart.data.datasets[0].label = keyLabel;
+      if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
+      if(chart) chart.update();
     }
   </script>
 </body>
-                                                                         </html>
+</html>
