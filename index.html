@@ -9,7 +9,7 @@ body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(13
 h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
 h3 { color:#2575fc; text-align:center; }
 input { width:90%; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:14px; }
-button { padding:12px 18px; margin:8px 6px; border:none; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+button { padding:10px 16px; margin:5px; border:none; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
 .btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }
 .btn-primary:hover { transform:translateY(-2px); opacity:0.9; }
 .btn-danger { background:#ff4d4d; color:#fff; }
@@ -19,8 +19,9 @@ a:hover { text-decoration:underline; }
 .page { display:none; }
 .active { display:block; }
 .card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }
-.card { background:#f8f9ff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); }
-.card span { font-size:22px; font-weight:bold; color:#2575fc; }
+.card { background:#f8f9ff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); position:relative; }
+.card span { font-size:16px; font-weight:bold; color:#2575fc; display:block; margin-bottom:8px; }
+.card button { margin-top:5px; display:inline-block; }
 canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; }
 .btn-group { text-align:center; margin-top:15px; }
 .error { color:red; font-size:13px; text-align:center; margin-top:-5px; margin-bottom:8px; }
@@ -80,16 +81,14 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <div class="btn-group">
       <button id="btnOn" class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
       <button id="btnOff" class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
-      <button class="btn-primary" onclick="changeToken()">🔑 Ubah Token</button>
-      <button class="btn-primary" id="setAdminBtn" onclick="setAdmin()">⭐ Set Admin</button>
       <button class="btn-danger" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 </div>
 
 <script>
-const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"};
-firebase.initializeApp(firebaseConfig);
+const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"}; 
+firebase.initializeApp(firebaseConfig); 
 const db=firebase.database();
 
 let currentUser=null, currentToken=null, isAdmin=false;
@@ -155,23 +154,6 @@ function updateAdminUI(){
   document.getElementById("btnOn").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("btnOff").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("userListTitle").style.display = isAdmin ? "block" : "none";
-  document.getElementById("setAdminBtn").style.display = isAdmin ? "none" : "inline-block";
-}
-
-function setAdmin(){
-  const input = prompt("Masukkan password untuk menjadi admin:");
-  if(input === "123"){
-    const userId = currentUser.replace(/\W/g,"_");
-    db.ref("users/"+userId+"/isAdmin").set(true).then(()=>{
-      alert("Sekarang Anda admin untuk token ini!");
-      isAdmin = true;
-      updateAdminUI();
-      document.getElementById("panelInfo").innerText += " | Admin";
-      loadUsersByToken();
-    });
-  } else {
-    alert("Password salah!");
-  }
 }
 
 function listenPanel(){
@@ -224,27 +206,6 @@ function forgotPassword(){
   });
 }
 
-function changeToken(){
-  if(!currentUser){ alert("Login dulu!"); return; }
-  const newToken=prompt("Masukkan token baru:");
-  if(newToken && newToken.trim()!==""){
-    const userId=currentUser.replace(/\W/g,"_");
-    db.ref("users/"+userId).update({token:newToken, isAdmin:false}).then(()=>{
-      currentToken=newToken;
-      isAdmin = false;
-      resetCharts();
-      setupCharts();
-      document.getElementById("panelInfo").innerText="Login sebagai: "+currentUser+" | Token: "+currentToken;
-      document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
-      document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
-      listenPanel();
-      loadUsersByToken();
-      updateAdminUI();
-      alert("Token berhasil diubah! Admin hanya berlaku di token yang telah di-set.");
-    });
-  }
-}
-
 function resetCharts(){
   voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[];
   if(voltageChart) voltageChart.destroy();
@@ -286,12 +247,33 @@ function loadUsersByToken(){
         if(users[key].token === currentToken){
           const card = document.createElement("div");
           card.className = "card";
-          card.innerText = users[key].email;
+          const emailSpan = document.createElement("span");
+          emailSpan.innerText = users[key].email + (users[key].isAdmin ? " (Admin)" : "");
+          card.appendChild(emailSpan);
+
+          if(users[key].email !== currentUser){
+            // Tombol hapus
+            const delBtn = document.createElement("button");
+            delBtn.className="btn-danger";
+            delBtn.innerText="Hapus";
+            delBtn.onclick = ()=>deleteUser(users[key].email);
+            card.appendChild(delBtn);
+          }
           listEl.appendChild(card);
         }
       }
     }
   });
+}
+
+function deleteUser(email){
+  if(confirm("Yakin ingin menghapus user: "+email+" ?")){
+    const userId = email.replace(/\W/g,"_");
+    db.ref("users/"+userId).remove().then(()=>{
+      alert("User "+email+" berhasil dihapus!");
+      loadUsersByToken();
+    });
+  }
 }
 </script>
 </body>
