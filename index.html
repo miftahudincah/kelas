@@ -81,6 +81,8 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <div class="btn-group">
       <button id="btnOn" class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
       <button id="btnOff" class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+      <!-- Tombol tambah token dihapus -->
+      <button class="btn-primary" onclick="window.open('https://miftahudincah.github.io/tesiot/','_blank')">🖥️ Simulasi</button>
       <button class="btn-danger" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
@@ -104,6 +106,7 @@ function showPage(id){
 
 function isValidEmail(email){ return email.includes('@') && email.includes('.'); }
 
+// ================= REGISTER ==================
 function registerUser(){
   const email=document.getElementById('regEmail').value.trim();
   const pass=document.getElementById('regPassword').value.trim();
@@ -111,20 +114,43 @@ function registerUser(){
   const ibu=document.getElementById('regIbu').value.trim();
   const errorBox=document.getElementById("regEmailError");
   errorBox.innerText="";
-  if(!email||!pass||!token||!ibu){ alert("Lengkapi semua data!"); return; }
-  if(!isValidEmail(email)){ errorBox.innerText="Format email tidak valid!"; return; }
-  const userId=email.replace(/\W/g,"_");
-  db.ref("users/"+userId).get().then(snap=>{
-    if(snap.exists()){ errorBox.innerText="Email sudah terpakai!"; }
-    else { 
-      db.ref("users/"+userId).set({email,password:pass,token,ibu,isAdmin:false}).then(()=>{
-        alert("Registrasi berhasil."); 
-        showPage("loginPage"); 
-      }); 
+
+  if(!email||!pass||!token||!ibu){ 
+    alert("Lengkapi semua data!"); 
+    return; 
+  }
+  if(!isValidEmail(email)){ 
+    errorBox.innerText="Format email tidak valid!"; 
+    return; 
+  }
+
+  db.ref("panel/"+token).get().then(panelSnap=>{
+    if(!panelSnap.exists()){
+      alert("❌ Token tidak terdaftar di panel, registrasi gagal!");
+      return;
     }
+
+    const userId=email.replace(/\W/g,"_");
+    db.ref("users/"+userId).get().then(snap=>{
+      if(snap.exists()){ 
+        errorBox.innerText="Email sudah terpakai!"; 
+      } else { 
+        db.ref("users/"+userId).set({
+          email,
+          password:pass,
+          token,
+          ibu,
+          isAdmin:false
+        }).then(()=>{
+          alert("✅ Registrasi berhasil.");
+          showPage("loginPage"); 
+        }); 
+      }
+    });
   });
 }
 
+// ================= LOGIN ==================
 function loginUser(){
   const email=document.getElementById('logEmail').value;
   const pass=document.getElementById('logPassword').value;
@@ -154,8 +180,10 @@ function updateAdminUI(){
   document.getElementById("btnOn").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("btnOff").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("userListTitle").style.display = isAdmin ? "block" : "none";
+  // Tombol tambah token dihapus dari sini juga
 }
 
+// ================= LISTEN PANEL ==================
 function listenPanel(){
   if(panelRef) panelRef.off();
   panelRef = db.ref("panel/"+currentToken);
@@ -206,6 +234,7 @@ function forgotPassword(){
   });
 }
 
+// ================= CHART ==================
 function resetCharts(){
   voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[];
   if(voltageChart) voltageChart.destroy();
@@ -236,6 +265,7 @@ function addData(chart, dataArr, labelArr, value){
   chart.update();
 }
 
+// ================= USER MANAGEMENT ==================
 function loadUsersByToken(){
   const listEl = document.getElementById("userList");
   listEl.innerHTML = "";
@@ -252,7 +282,6 @@ function loadUsersByToken(){
           card.appendChild(emailSpan);
 
           if(users[key].email !== currentUser){
-            // Tombol hapus
             const delBtn = document.createElement("button");
             delBtn.className="btn-danger";
             delBtn.innerText="Hapus";
