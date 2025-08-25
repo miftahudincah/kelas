@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>IoT Dashboard</title>
 <style>
-body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#333; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#333; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; flex-direction:column; }
 .container { width:100%; max-width:800px; background:#fff; padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); animation:fadeIn 0.8s ease-in-out; }
 h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
 h3 { color:#2575fc; text-align:center; }
@@ -26,6 +26,7 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
 .btn-group { text-align:center; margin-top:15px; }
 .error { color:red; font-size:13px; text-align:center; margin-top:-5px; margin-bottom:8px; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+.footer { margin-top:15px; font-size:12px; color:#fff; text-align:center; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -86,6 +87,11 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
       <button class="btn-danger" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  Pembuat miftahuddin wardani
 </div>
 
 <script>
@@ -180,7 +186,6 @@ function updateAdminUI(){
   document.getElementById("btnOn").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("btnOff").style.display = isAdmin ? "inline-block" : "none";
   document.getElementById("userListTitle").style.display = isAdmin ? "block" : "none";
-  // Tombol tambah token dihapus dari sini juga
 }
 
 // ================= LISTEN PANEL ==================
@@ -245,23 +250,51 @@ function setupCharts(){
   if(!voltageChart){
     voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{
       type:'line',
-      data:{labels:voltageLabels, datasets:[{label:'Voltage', data:voltageData, borderColor:'#2575fc', backgroundColor:'rgba(37,117,252,0.2)', tension:0.3}]},
-      options:{responsive:true, scales:{y:{beginAtZero:true}}}
+      data:{
+        labels:voltageLabels,
+        datasets:[{
+          label:'Voltage',
+          data:voltageData,
+          borderColor:'#2575fc',
+          backgroundColor:'rgba(37,117,252,0.2)',
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true } }
+      }
     });
   }
   if(!ampereChart){
     ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{
       type:'line',
-      data:{labels:ampereLabels, datasets:[{label:'Ampere', data:ampereData, borderColor:'#ff9500', backgroundColor:'rgba(255,149,0,0.2)', tension:0.3}]},
-      options:{responsive:true, scales:{y:{beginAtZero:true}}}
+      data:{
+        labels:ampereLabels,
+        datasets:[{
+          label:'Ampere',
+          data:ampereData,
+          borderColor:'#ff9500',
+          backgroundColor:'rgba(255,149,0,0.2)',
+          tension:0.3
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true } }
+      }
     });
   }
 }
 
 function addData(chart, dataArr, labelArr, value){
   const now=new Date().toLocaleTimeString();
-  dataArr.push(value); labelArr.push(now);
-  if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
+  dataArr.push(value); 
+  labelArr.push(now);
+  if(dataArr.length>10){ 
+    dataArr.shift(); 
+    labelArr.shift(); 
+  }
   chart.update();
 }
 
