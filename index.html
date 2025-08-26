@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IoT Dashboard</title>
+<title>Trainer SMK</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -58,7 +58,7 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
 </head>
 <body>
 <div class="container">
-  <h2 id="controllerTitle">⚡ IoT Dashboard</h2>
+  <h2 id="controllerTitle">⚡ Trainer SMK</h2>
 
   <!-- REGISTER PAGE -->
   <div id="registerPage" class="page">
@@ -88,7 +88,7 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
 
   <!-- PANEL PAGE -->
   <div id="panelPage" class="page">
-    <h3 id="panelTitle">Panel IoT</h3>
+    <h3 id="panelTitle">Panel Trainer SMK</h3>
     <p id="panelInfo" style="text-align:center;"></p>
 
     <div class="card-grid">
@@ -160,7 +160,6 @@ function registerUser(){
     return;
   }
 
-  // Cek token panel
   db.ref("panel/" + token).get().then(panelSnap => {
     if(!panelSnap.exists()){
       alert("❌ Token panel tidak ditemukan!");
@@ -236,7 +235,6 @@ function initPanel(token){
   if(!token) return;
   panelRef = db.ref("panel/" + token);
 
-  // Tampilkan tombol ON/OFF hanya untuk admin
   const btnOn = document.getElementById("btnOn");
   const btnOff = document.getElementById("btnOff");
   if(isAdmin){
@@ -251,38 +249,36 @@ function initPanel(token){
     const data = snap.val(); if(!data) return;
     document.getElementById("voltageVal").innerText = data.voltage || 0;
     document.getElementById("ampereVal").innerText = data.ampere || 0;
-document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
+    document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
 
-const now = new Date().toLocaleTimeString();
-voltageData.push(data.voltage || 0);
-voltageLabels.push(now);
-ampereData.push(data.ampere || 0);
-ampereLabels.push(now);
+    const now = new Date().toLocaleTimeString();
+    voltageData.push(data.voltage || 0);
+    voltageLabels.push(now);
+    ampereData.push(data.ampere || 0);
+    ampereLabels.push(now);
 
-// Batasi history chart 20 data terakhir
-if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
-if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
+    if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
+    if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
 
-updateCharts();
-});
+    updateCharts();
+  });
 
-// Tampilkan list pengguna yang menggunakan token ini
-db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
-  const users = snap.val();
-  const userListDiv = document.getElementById("userList");
-  userListDiv.innerHTML = "";
-  if(users){
-    document.getElementById("userListTitle").style.display = "block";
-    Object.values(users).forEach(u => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerText = u.email;
-      userListDiv.appendChild(card);
-    });
-  } else {
-    document.getElementById("userListTitle").style.display = "none";
-  }
-});
+  db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
+    const users = snap.val();
+    const userListDiv = document.getElementById("userList");
+    userListDiv.innerHTML = "";
+    if(users){
+      document.getElementById("userListTitle").style.display = "block";
+      Object.values(users).forEach(u => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerText = u.email;
+        userListDiv.appendChild(card);
+      });
+    } else {
+      document.getElementById("userListTitle").style.display = "none";
+    }
+  });
 }
 
 /* === UPDATE CHARTS === */
@@ -316,7 +312,7 @@ function updateCharts(){
 
 /* === KIRIM COMMAND ON/OFF === */
 function sendCommand(cmd){
-  if(!panelRef || !isAdmin) return; // Hanya admin bisa mengirim command
+  if(!panelRef || !isAdmin) return;
   panelRef.update({status: cmd});
 }
 
