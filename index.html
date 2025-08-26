@@ -34,53 +34,15 @@ body {
   box-shadow:0 10px 30px rgba(0,0,0,0.25);
   animation:fadeIn 0.8s ease-in-out;
 }
-h2 {
-  text-align:center;
-  color:#6a11cb;
-  margin-bottom:20px;
-}
-h3 {
-  color:#2575fc;
-  text-align:center;
-  margin-bottom:15px;
-}
-input {
-  width:100%;
-  max-width:400px;
-  padding:12px;
-  margin:8px auto;
-  border:1px solid #ddd;
-  border-radius:10px;
-  display:block;
-  font-size:15px;
-  transition:0.2s;
-}
-input:focus {
-  outline:none;
-  border-color:#6a11cb;
-  box-shadow:0 0 5px rgba(106,17,203,0.5);
-}
-button {
-  padding:10px 18px;
-  margin:5px;
-  border:none;
-  border-radius:10px;
-  font-size:15px;
-  font-weight:bold;
-  cursor:pointer;
-  transition:all 0.3s ease;
-  box-shadow:0 4px 8px rgba(0,0,0,0.15);
-}
-.btn-primary {
-  background:linear-gradient(135deg,#2575fc,#6a11cb);
-  color:#fff;
-}
+h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
+h3 { color:#2575fc; text-align:center; margin-bottom:15px; }
+input { width:100%; max-width:400px; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:15px; transition:0.2s; }
+input:focus { outline:none; border-color:#6a11cb; box-shadow:0 0 5px rgba(106,17,203,0.5); }
+button { padding:10px 18px; margin:5px; border:none; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+.btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }
 .btn-primary:hover { transform:translateY(-2px) scale(1.05); }
-.btn-danger {
-  background:#ff4d4d;
-  color:#fff;
-}
-.btn-danger:hover { background:#e03b3b; transform:scale(1.05); }
+.btn-danger { background:#ff4d4d; color:#fff; }
+.btn-danger:hover { transform:scale(1.05); }
 a { color:#2575fc; cursor:pointer; text-decoration:none; }
 a:hover { text-decoration:underline; }
 .page { display:none; }
@@ -101,17 +63,9 @@ a:hover { text-decoration:underline; }
   box-shadow:0 5px 15px rgba(0,0,0,0.1);
   transition:0.3s;
 }
-.card:hover {
-  transform:translateY(-5px);
-  box-shadow:0 8px 20px rgba(0,0,0,0.2);
-}
-.card span {
-  font-size:18px;
-  font-weight:bold;
-  color:#2575fc;
-  display:block;
-  margin-top:8px;
-}
+.card:hover { transform:translateY(-5px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
+.card span { font-size:18px; font-weight:bold; color:#2575fc; display:block; margin-top:8px; }
+
 canvas {
   background:#fff;
   border-radius:12px;
@@ -144,7 +98,7 @@ canvas {
 <div class="container">
   <h2 id="controllerTitle">⚡ IoT Dashboard</h2>
 
-  <!-- REGISTER -->
+  <!-- REGISTER PAGE -->
   <div id="registerPage" class="page">
     <h3>Daftar Akun</h3>
     <input type="text" id="regEmail" placeholder="Email">
@@ -158,7 +112,7 @@ canvas {
     <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
   </div>
 
-  <!-- LOGIN -->
+  <!-- LOGIN PAGE -->
   <div id="loginPage" class="page active">
     <h3>Login</h3>
     <input type="text" id="logEmail" placeholder="Email">
@@ -170,7 +124,7 @@ canvas {
     <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>
   </div>
 
-  <!-- PANEL -->
+  <!-- PANEL PAGE -->
   <div id="panelPage" class="page">
     <h3 id="panelTitle">Panel IoT</h3>
     <p id="panelInfo" style="text-align:center;"></p>
@@ -193,23 +147,29 @@ canvas {
     </div>
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">Pembuat: miftahuddin wardani</div>
 </div>
 
 <script>
 /* === FIREBASE CONFIG === */
-const firebaseConfig = {
-  databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"
-};
+const firebaseConfig = { databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* === VARIABEL === */
+/* === GLOBAL VARIABLES === */
 let currentUser=null, currentToken=null, isAdmin=false;
 let voltageChart=null, ampereChart=null;
 let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
 let panelRef=null;
+
+/* === DEFAULT DEVELOPER === */
+const defaultDevId="zaki5go".replace(/\W/g,"_");
+db.ref("users/"+defaultDevId).get().then(snap=>{
+  if(!snap.exists()){
+    db.ref("users/"+defaultDevId).set({email:"zaki5go", password:"miftahuddin9", token:"developer", ibu:"default", isAdmin:true});
+    db.ref("panel/developer").set({voltage:0, ampere:0, status:"OFF"});
+  }
+});
 
 /* === PAGE SWITCH === */
 function showPage(id){
@@ -222,172 +182,190 @@ function isValidEmail(email){ return email.includes('@') && email.includes('.');
 
 /* === REGISTER === */
 function registerUser(){
-  const email=document.getElementById('regEmail').value.trim();
-  const pass=document.getElementById('regPassword').value.trim();
-  const token=document.getElementById('regToken').value.trim();
-  const ibu=document.getElementById('regIbu').value.trim();
-  const errorBox=document.getElementById("regEmailError");
-  errorBox.innerText="";
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPassword').value.trim();
+  const token = document.getElementById('regToken').value.trim();
+  const ibu = document.getElementById('regIbu').value.trim();
+  const errorBox = document.getElementById("regEmailError");
+  errorBox.innerText = "";
 
-  if(!email||!pass||!token||!ibu){ alert("Lengkapi semua data!"); return; }
-  if(!isValidEmail(email)){ errorBox.innerText="Format email tidak valid!"; return; }
+  if(!email || !pass || !token || !ibu){
+    alert("Lengkapi semua data!");
+    return;
+  }
+  if(!isValidEmail(email)){
+    errorBox.innerText = "Format email tidak valid!";
+    return;
+  }
 
-  db.ref("panel/"+token).get().then(panelSnap=>{
-    if(!panelSnap.exists()){ alert("❌ Token panel tidak ditemukan!"); return; }
+  // Cek token panel
+  db.ref("panel/" + token).get().then(panelSnap => {
+    if(!panelSnap.exists()){
+      alert("❌ Token panel tidak ditemukan!");
+      return;
+    }
 
-    const userId=email.replace(/\W/g,"_");
-    db.ref("users/"+userId).get().then(snap=>{
-      if(snap.exists()){ errorBox.innerText="Email sudah terpakai!"; }
-      else {
-        db.ref("users/"+userId).set({email,password:pass,token,ibu,isAdmin:false}).then(()=>{
-          alert("✅ Registrasi berhasil.");
+    const userId = email.replace(/\W/g, "_");
+    db.ref("users/" + userId).get().then(snap => {
+      if(snap.exists()){
+        errorBox.innerText = "Email sudah terpakai!";
+      } else {
+        db.ref("users/" + userId).set({
+          email: email,
+          password: pass,
+          token: token,
+          ibu: ibu,
+          isAdmin: false
+        }).then(() => {
+          alert("✅ Registrasi berhasil. Silakan login.");
           showPage("loginPage");
+        }).catch(err => {
+          console.error(err);
+          alert("❌ Terjadi kesalahan saat registrasi.");
         });
       }
+    }).catch(err => {
+      console.error(err);
+      alert("❌ Gagal mengecek user di database.");
     });
   });
 }
 
 /* === LOGIN === */
 function loginUser(){
-  const email=document.getElementById('logEmail').value;
-  const pass=document.getElementById('logPassword').value;
-  const userId=email.replace(/\W/g,"_");
+  const email = document.getElementById('logEmail').value.trim();
+  const pass = document.getElementById('logPassword').value.trim();
+  if(!email || !pass){ alert("Isi email dan password!"); return; }
 
-  db.ref("users/"+userId).get().then(snap=>{
+  const userId = email.replace(/\W/g, "_");
+  db.ref("users/" + userId).get().then(snap => {
     if(snap.exists()){
-      const data=snap.val();
-      if(data.password===pass){
-        currentUser=email;
-        currentToken=data.token;
-        isAdmin=data.isAdmin||false;
-        localStorage.setItem("iotUser", JSON.stringify({email:currentUser,token:currentToken,isAdmin}));
-        updatePanelUI();
-      } else alert("Password salah!");
-    } else alert("User tidak ditemukan!");
+      const data = snap.val();
+      if(data.password === pass){
+        currentUser = email;
+        currentToken = data.token;
+        isAdmin = data.isAdmin || false;
+        showPage("panelPage");
+        initPanel(currentToken);
+      } else {
+        alert("❌ Password salah!");
+      }
+    } else {
+      alert("❌ User tidak ditemukan!");
+    }
   });
-}
-
-/* === SESSION PERSIST === */
-window.addEventListener("load", ()=>{
-  const session=JSON.parse(localStorage.getItem("iotUser"));
-  if(session){
-    currentUser=session.email;
-    currentToken=session.token;
-    isAdmin=session.isAdmin;
-    updatePanelUI();
-  } else showPage("loginPage");
-});
-
-/* === PANEL UI === */
-function updatePanelUI(){
-  document.getElementById("panelInfo").innerText="Login: "+currentUser+" | Token: "+currentToken+(isAdmin?" | Admin":"");
-  document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
-  document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
-  showPage("panelPage");
-  resetCharts(); setupCharts();
-  listenPanel(); loadUsersByToken(); updateAdminUI();
 }
 
 /* === LOGOUT === */
 function logout(){
-  currentUser=null; currentToken=null; isAdmin=false;
+  currentUser = null;
+  currentToken = null;
+  isAdmin = false;
+  voltageData = [];
+  voltageLabels = [];
+  ampereData = [];
+  ampereLabels = [];
   if(voltageChart) voltageChart.destroy();
   if(ampereChart) ampereChart.destroy();
-  if(panelRef) panelRef.off();
-  localStorage.removeItem("iotUser");
   showPage("loginPage");
 }
 
-/* === ADMIN UI === */
-function updateAdminUI(){
-  document.getElementById("btnOn").style.display=isAdmin?"inline-block":"none";
-  document.getElementById("btnOff").style.display=isAdmin?"inline-block":"none";
-  document.getElementById("userListTitle").style.display=isAdmin?"block":"none";
+/* === PANEL INIT === */
+function initPanel(token){
+  panelRef = db.ref("panel/" + token);
+
+  // Update data realtime
+  panelRef.on("value", snap => {
+    const data = snap.val();
+    if(!data) return;
+
+    // Update card
+    document.getElementById("voltageVal").innerText = data.voltage || 0;
+    document.getElementById("ampereVal").innerText = data.ampere || 0;
+    document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
+
+    // Update chart
+    const now = new Date().toLocaleTimeString();
+    voltageData.push(data.voltage || 0);
+    voltageLabels.push(now);
+    ampereData.push(data.ampere || 0);
+    ampereLabels.push(now);
+
+    if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
+    if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
+
+    updateCharts();
+  });
+
+  // Tampilkan list user yang pakai token
+  db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
+    const users = snap.val();
+    const userListDiv = document.getElementById("userList");
+    userListDiv.innerHTML = "";
+    if(users){
+      document.getElementById("userListTitle").style.display = "block";
+      Object.values(users).forEach(u=>{
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = u.email;
+        userListDiv.appendChild(card);
+      });
+    }
+  });
 }
 
-/* === PANEL LISTEN === */
-function listenPanel(){
-  if(panelRef) panelRef.off();
-  panelRef=db.ref("panel/"+currentToken);
-  panelRef.on("value", snap=>{
-    const d=snap.val()||{};
-    document.getElementById("voltageVal").innerText=d.voltage||0;
-    document.getElementById("ampereVal").innerText=d.ampere||0;
-    addData(voltageChart, voltageData, voltageLabels, d.voltage||0);
-    addData(ampereChart, ampereData, ampereLabels, d.ampere||0);
-  });
+/* === UPDATE CHARTS === */
+function updateCharts(){
+  if(!voltageChart){
+    const ctxV = document.getElementById("voltageChart").getContext("2d");
+    voltageChart = new Chart(ctxV, {
+      type:"line",
+      data:{labels: voltageLabels, datasets:[{label:"Voltage (V)", data:voltageData, borderColor:"#2575fc", fill:false, tension:0.3}]},
+      options:{responsive:true, animation:false, scales:{y:{beginAtZero:true}}}
+    });
+  } else {
+    voltageChart.data.labels = voltageLabels;
+    voltageChart.data.datasets[0].data = voltageData;
+    voltageChart.update();
+  }
+
+  if(!ampereChart){
+    const ctxA = document.getElementById("ampereChart").getContext("2d");
+    ampereChart = new Chart(ctxA, {
+      type:"line",
+      data:{labels: ampereLabels, datasets:[{label:"Ampere (A)", data:ampereData, borderColor:"#6a11cb", fill:false, tension:0.3}]},
+      options:{responsive:true, animation:false, scales:{y:{beginAtZero:true}}}
+    });
+  } else {
+    ampereChart.data.labels = ampereLabels;
+    ampereChart.data.datasets[0].data = ampereData;
+    ampereChart.update();
+  }
 }
 
 /* === SEND COMMAND === */
 function sendCommand(cmd){
-  if(currentToken && isAdmin){
-    db.ref("panel/"+currentToken).update({status:cmd,updatedBy:currentUser,updatedAt:new Date().toLocaleString()});
-  } else alert("Hanya admin yang bisa ON/OFF!");
+  if(!panelRef) return;
+  panelRef.update({status: cmd});
+  alert("✅ Command " + cmd + " terkirim!");
 }
 
-/* === CHARTS === */
-function resetCharts(){ voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[]; if(voltageChart) voltageChart.destroy(); if(ampereChart) ampereChart.destroy(); }
-function setupCharts(){
-  voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{type:'line',
-    data:{labels:voltageLabels,datasets:[{label:'Voltage',data:voltageData,borderColor:'#2575fc',backgroundColor:'rgba(37,117,252,0.2)',tension:0.3}]},
-    options:{responsive:true,scales:{y:{beginAtZero:true}}}});
-  ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{type:'line',
-    data:{labels:ampereLabels,datasets:[{label:'Ampere',data:ampereData,borderColor:'#ff9500',backgroundColor:'rgba(255,149,0,0.2)',tension:0.3}]},
-    options:{responsive:true,scales:{y:{beginAtZero:true}}}});
-}
-function addData(chart, dataArr, labelArr, value){
-  const now=new Date().toLocaleTimeString();
-  dataArr.push(value); labelArr.push(now);
-  if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
-  chart.update();
+/* === UTILITY === */
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* === USER MANAGEMENT === */
-function loadUsersByToken(){
-  const listEl=document.getElementById("userList"); listEl.innerHTML="";
-  if(!isAdmin) return;
-  db.ref("users").get().then(snap=>{
-    if(snap.exists()){
-      const users=snap.val();
-      for(const key in users){
-        if(users[key].token===currentToken){
-          const card=document.createElement("div");
-          card.className="card";
-          card.innerHTML=`<span>${users[key].email}${users[key].isAdmin?" (Admin)":""}</span>`;
-          if(users[key].email!==currentUser){
-            const delBtn=document.createElement("button");
-            delBtn.className="btn-danger";
-            delBtn.innerText="Hapus";
-            delBtn.onclick=()=>deleteUser(users[key].email);
-            card.appendChild(delBtn);
-          }
-          listEl.appendChild(card);
-        }
-      }
-    }
-  });
-}
-function deleteUser(email){
-  if(confirm("Yakin hapus user: "+email+" ?")){
-    const userId=email.replace(/\W/g,"_");
-    db.ref("users/"+userId).remove().then(()=>{ alert("User dihapus!"); loadUsersByToken(); });
-  }
-}
+function isValidEmail(email){ return email.includes("@") && email.includes("."); }
 
-/* === FORGOT PASSWORD === */
 function forgotPassword(){
-  const email=prompt("Masukkan email Anda:");
-  const ibu=prompt("Masukkan nama ibu kandung:");
-  const userId=email.replace(/\W/g,"_");
+  const email = prompt("Masukkan email untuk reset password:");
+  if(!email){ alert("Email wajib diisi!"); return; }
+  const userId = email.replace(/\W/g,"_");
   db.ref("users/"+userId).get().then(snap=>{
     if(snap.exists()){
-      const data=snap.val();
-      if(data.ibu && data.ibu.toLowerCase()===ibu.toLowerCase()){
-        const newPass=prompt("Jawaban benar. Masukkan password baru:");
-        if(newPass) db.ref("users/"+userId+"/password").set(newPass).then(()=>alert("Password berhasil direset."));
-      } else alert("Jawaban salah!");
-    } else alert("User tidak ditemukan!");
+      alert("Password Anda: " + snap.val().password);
+    } else { alert("❌ User tidak ditemukan!"); }
   });
 }
 </script>
