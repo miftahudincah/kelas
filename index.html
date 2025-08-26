@@ -2,47 +2,155 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IoT Dashboard</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#333; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; flex-direction:column; }
-.container { width:100%; max-width:800px; background:#fff; padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); animation:fadeIn 0.8s ease-in-out; }
-h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
-h3 { color:#2575fc; text-align:center; }
-input { width:90%; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:14px; }
-button { padding:10px 16px; margin:5px; border:none; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
-.btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }
-.btn-primary:hover { transform:translateY(-2px); opacity:0.9; }
-.btn-danger { background:#ff4d4d; color:#fff; }
-.btn-danger:hover { background:#e03b3b; }
+/* === GLOBAL === */
+body {
+  font-family:"Segoe UI", Tahoma, sans-serif;
+  background:linear-gradient(135deg,#6a11cb,#2575fc);
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  color:#333;
+}
+.container {
+  width:100%;
+  max-width:950px;
+  background:#fff;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  animation:fadeIn 0.8s ease-in-out;
+}
+h2 {
+  text-align:center;
+  color:#6a11cb;
+  margin-bottom:20px;
+}
+h3 {
+  color:#2575fc;
+  text-align:center;
+  margin-bottom:15px;
+}
+input {
+  width:100%;
+  max-width:400px;
+  padding:12px;
+  margin:8px auto;
+  border:1px solid #ddd;
+  border-radius:10px;
+  display:block;
+  font-size:15px;
+  transition:0.2s;
+}
+input:focus {
+  outline:none;
+  border-color:#6a11cb;
+  box-shadow:0 0 5px rgba(106,17,203,0.5);
+}
+button {
+  padding:10px 18px;
+  margin:5px;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  box-shadow:0 4px 8px rgba(0,0,0,0.15);
+}
+.btn-primary {
+  background:linear-gradient(135deg,#2575fc,#6a11cb);
+  color:#fff;
+}
+.btn-primary:hover { transform:translateY(-2px) scale(1.05); }
+.btn-danger {
+  background:#ff4d4d;
+  color:#fff;
+}
+.btn-danger:hover { background:#e03b3b; transform:scale(1.05); }
 a { color:#2575fc; cursor:pointer; text-decoration:none; }
 a:hover { text-decoration:underline; }
 .page { display:none; }
 .active { display:block; }
-.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }
-.card { background:#f8f9ff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); position:relative; }
-.card span { font-size:16px; font-weight:bold; color:#2575fc; display:block; margin-bottom:8px; }
-.card button { margin-top:5px; display:inline-block; }
-canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; }
-.btn-group { text-align:center; margin-top:15px; }
-.error { color:red; font-size:13px; text-align:center; margin-top:-5px; margin-bottom:8px; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
-.footer { margin-top:15px; font-size:12px; color:#fff; text-align:center; }
+
+/* === CARD GRID === */
+.card-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+  margin:15px 0;
+}
+.card {
+  background:#f8f9ff;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+  transition:0.3s;
+}
+.card:hover {
+  transform:translateY(-5px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+.card span {
+  font-size:18px;
+  font-weight:bold;
+  color:#2575fc;
+  display:block;
+  margin-top:8px;
+}
+canvas {
+  background:#fff;
+  border-radius:12px;
+  padding:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+  margin-top:20px;
+  width:100% !important;
+  height:auto !important;
+}
+.btn-group { text-align:center; margin-top:20px; }
+.error { color:red; font-size:13px; text-align:center; margin-bottom:8px; }
+.footer { margin-top:20px; font-size:13px; color:#fff; text-align:center; }
+
+/* === ANIMASI === */
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(-20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width:600px){
+  .container { padding:20px; }
+  h2 { font-size:1.6rem; }
+  h3 { font-size:1.2rem; }
+  button { font-size:14px; padding:8px 14px; }
+}
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="container">
   <h2 id="controllerTitle">⚡ IoT Dashboard</h2>
 
-  <!-- Register -->
+  <!-- REGISTER -->
   <div id="registerPage" class="page">
     <h3>Daftar Akun</h3>
     <input type="text" id="regEmail" placeholder="Email">
     <div id="regEmailError" class="error"></div>
     <input type="password" id="regPassword" placeholder="Password">
-    <input type="text" id="regToken" placeholder="Token Acak (misal: token123)">
+    <input type="text" id="regToken" placeholder="Token Panel">
     <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
     <div style="text-align:center;">
       <button class="btn-primary" onclick="registerUser()">Daftar</button>
@@ -50,8 +158,8 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
   </div>
 
-  <!-- Login -->
-  <div id="loginPage" class="page">
+  <!-- LOGIN -->
+  <div id="loginPage" class="page active">
     <h3>Login</h3>
     <input type="text" id="logEmail" placeholder="Email">
     <input type="password" id="logPassword" placeholder="Password">
@@ -62,16 +170,16 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>
   </div>
 
-  <!-- Panel -->
+  <!-- PANEL -->
   <div id="panelPage" class="page">
     <h3 id="panelTitle">Panel IoT</h3>
     <p id="panelInfo" style="text-align:center;"></p>
+
     <div class="card-grid">
-      <div class="card">Voltage: <br><span id="voltageVal">0</span> V</div>
-      <div class="card">Ampere: <br><span id="ampereVal">0</span> A</div>
+      <div class="card">Voltage<span id="voltageVal">0</span> V</div>
+      <div class="card">Ampere<span id="ampereVal">0</span> A</div>
     </div>
 
-    <!-- Daftar user token hanya admin -->
     <h3 id="userListTitle" style="display:none;">Pengguna Token Ini</h3>
     <div id="userList" class="card-grid"></div>
 
@@ -85,31 +193,34 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">Pembuat miftahuddin wardani</div>
+  <!-- FOOTER -->
+  <div class="footer">Pembuat: miftahuddin wardani</div>
 </div>
 
 <script>
-const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"};
+/* === FIREBASE CONFIG === */
+const firebaseConfig = {
+  databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"
+};
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+const db = firebase.database();
 
+/* === VARIABEL === */
 let currentUser=null, currentToken=null, isAdmin=false;
 let voltageChart=null, ampereChart=null;
 let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
 let panelRef=null;
 
-// ===== PAGE SWITCH =====
+/* === PAGE SWITCH === */
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id==="registerPage") document.getElementById("regEmailError").innerText="";
 }
 
-// ===== EMAIL VALIDATION =====
+/* === VALIDASI EMAIL === */
 function isValidEmail(email){ return email.includes('@') && email.includes('.'); }
 
-// ===== REGISTER =====
+/* === REGISTER === */
 function registerUser(){
   const email=document.getElementById('regEmail').value.trim();
   const pass=document.getElementById('regPassword').value.trim();
@@ -122,7 +233,7 @@ function registerUser(){
   if(!isValidEmail(email)){ errorBox.innerText="Format email tidak valid!"; return; }
 
   db.ref("panel/"+token).get().then(panelSnap=>{
-    if(!panelSnap.exists()){ alert("❌ Token tidak terdaftar di panel, registrasi gagal!"); return; }
+    if(!panelSnap.exists()){ alert("❌ Token panel tidak ditemukan!"); return; }
 
     const userId=email.replace(/\W/g,"_");
     db.ref("users/"+userId).get().then(snap=>{
@@ -137,7 +248,7 @@ function registerUser(){
   });
 }
 
-// ===== LOGIN =====
+/* === LOGIN === */
 function loginUser(){
   const email=document.getElementById('logEmail').value;
   const pass=document.getElementById('logPassword').value;
@@ -149,18 +260,15 @@ function loginUser(){
       if(data.password===pass){
         currentUser=email;
         currentToken=data.token;
-        isAdmin=data.isAdmin || false;
-
-        // simpan session
-        localStorage.setItem("iotUser", JSON.stringify({email:currentUser,token:currentToken,isAdmin:isAdmin}));
-
+        isAdmin=data.isAdmin||false;
+        localStorage.setItem("iotUser", JSON.stringify({email:currentUser,token:currentToken,isAdmin}));
         updatePanelUI();
       } else alert("Password salah!");
     } else alert("User tidak ditemukan!");
   });
 }
 
-// ===== SESSION PERSIST =====
+/* === SESSION PERSIST === */
 window.addEventListener("load", ()=>{
   const session=JSON.parse(localStorage.getItem("iotUser"));
   if(session){
@@ -171,20 +279,17 @@ window.addEventListener("load", ()=>{
   } else showPage("loginPage");
 });
 
-// ===== UPDATE PANEL UI =====
+/* === PANEL UI === */
 function updatePanelUI(){
-  document.getElementById("panelInfo").innerText="Login sebagai: "+currentUser+" | Token: "+currentToken + (isAdmin ? " | Admin" : "");
+  document.getElementById("panelInfo").innerText="Login: "+currentUser+" | Token: "+currentToken+(isAdmin?" | Admin":"");
   document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;
   document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;
   showPage("panelPage");
-  resetCharts();
-  setupCharts();
-  listenPanel();
-  loadUsersByToken();
-  updateAdminUI();
+  resetCharts(); setupCharts();
+  listenPanel(); loadUsersByToken(); updateAdminUI();
 }
 
-// ===== LOGOUT =====
+/* === LOGOUT === */
 function logout(){
   currentUser=null; currentToken=null; isAdmin=false;
   if(voltageChart) voltageChart.destroy();
@@ -194,20 +299,19 @@ function logout(){
   showPage("loginPage");
 }
 
-// ===== ADMIN UI =====
+/* === ADMIN UI === */
 function updateAdminUI(){
   document.getElementById("btnOn").style.display=isAdmin?"inline-block":"none";
   document.getElementById("btnOff").style.display=isAdmin?"inline-block":"none";
   document.getElementById("userListTitle").style.display=isAdmin?"block":"none";
 }
 
-// ===== PANEL LISTEN =====
+/* === PANEL LISTEN === */
 function listenPanel(){
   if(panelRef) panelRef.off();
   panelRef=db.ref("panel/"+currentToken);
   panelRef.on("value", snap=>{
-    const d=snap.val();
-    if(!d){ document.getElementById("voltageVal").innerText=0; document.getElementById("ampereVal").innerText=0; return; }
+    const d=snap.val()||{};
     document.getElementById("voltageVal").innerText=d.voltage||0;
     document.getElementById("ampereVal").innerText=d.ampere||0;
     addData(voltageChart, voltageData, voltageLabels, d.voltage||0);
@@ -215,28 +319,31 @@ function listenPanel(){
   });
 }
 
-// ===== SEND COMMAND =====
+/* === SEND COMMAND === */
 function sendCommand(cmd){
   if(currentToken && isAdmin){
     db.ref("panel/"+currentToken).update({status:cmd,updatedBy:currentUser,updatedAt:new Date().toLocaleString()});
-  } else alert("Hanya admin yang bisa mengontrol ON/OFF!");
+  } else alert("Hanya admin yang bisa ON/OFF!");
 }
 
-// ===== CHARTS =====
+/* === CHARTS === */
 function resetCharts(){ voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[]; if(voltageChart) voltageChart.destroy(); if(ampereChart) ampereChart.destroy(); }
 function setupCharts(){
-  voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{type:'line',data:{labels:voltageLabels,datasets:[{label:'Voltage',data:voltageData,borderColor:'#2575fc',backgroundColor:'rgba(37,117,252,0.2)',tension:0.3}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
-  ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{type:'line',data:{labels:ampereLabels,datasets:[{label:'Ampere',data:ampereData,borderColor:'#ff9500',backgroundColor:'rgba(255,149,0,0.2)',tension:0.3}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+  voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{type:'line',
+    data:{labels:voltageLabels,datasets:[{label:'Voltage',data:voltageData,borderColor:'#2575fc',backgroundColor:'rgba(37,117,252,0.2)',tension:0.3}]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+  ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{type:'line',
+    data:{labels:ampereLabels,datasets:[{label:'Ampere',data:ampereData,borderColor:'#ff9500',backgroundColor:'rgba(255,149,0,0.2)',tension:0.3}]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}});
 }
 function addData(chart, dataArr, labelArr, value){
   const now=new Date().toLocaleTimeString();
-  dataArr.push(value);
-  labelArr.push(now);
+  dataArr.push(value); labelArr.push(now);
   if(dataArr.length>10){ dataArr.shift(); labelArr.shift(); }
   chart.update();
 }
 
-// ===== USER MANAGEMENT =====
+/* === USER MANAGEMENT === */
 function loadUsersByToken(){
   const listEl=document.getElementById("userList"); listEl.innerHTML="";
   if(!isAdmin) return;
@@ -247,12 +354,11 @@ function loadUsersByToken(){
         if(users[key].token===currentToken){
           const card=document.createElement("div");
           card.className="card";
-          const emailSpan=document.createElement("span");
-          emailSpan.innerText=users[key].email+(users[key].isAdmin?" (Admin)":"");
-          card.appendChild(emailSpan);
+          card.innerHTML=`<span>${users[key].email}${users[key].isAdmin?" (Admin)":""}</span>`;
           if(users[key].email!==currentUser){
             const delBtn=document.createElement("button");
-            delBtn.className="btn-danger"; delBtn.innerText="Hapus";
+            delBtn.className="btn-danger";
+            delBtn.innerText="Hapus";
             delBtn.onclick=()=>deleteUser(users[key].email);
             card.appendChild(delBtn);
           }
@@ -263,13 +369,13 @@ function loadUsersByToken(){
   });
 }
 function deleteUser(email){
-  if(confirm("Yakin ingin menghapus user: "+email+" ?")){
+  if(confirm("Yakin hapus user: "+email+" ?")){
     const userId=email.replace(/\W/g,"_");
-    db.ref("users/"+userId).remove().then(()=>{ alert("User "+email+" berhasil dihapus!"); loadUsersByToken(); });
+    db.ref("users/"+userId).remove().then(()=>{ alert("User dihapus!"); loadUsersByToken(); });
   }
 }
 
-// ===== FORGOT PASSWORD =====
+/* === FORGOT PASSWORD === */
 function forgotPassword(){
   const email=prompt("Masukkan email Anda:");
   const ibu=prompt("Masukkan nama ibu kandung:");
@@ -286,4 +392,4 @@ function forgotPassword(){
 }
 </script>
 </body>
-  </html>
+</html>
