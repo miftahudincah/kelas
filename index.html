@@ -113,8 +113,16 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
 </div>
 
 <script>
-/* === FIREBASE CONFIG === */
-const firebaseConfig = { databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/" };
+/* === FIREBASE CONFIG (ISI DENGAN PUNYA KAMU SENDIRI) === */
+const firebaseConfig = {
+  apiKey: "ISI_API_KEY",
+  authDomain: "esp32-3a6dd.firebaseapp.com",
+  databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/",
+  projectId: "esp32-3a6dd",
+  storageBucket: "esp32-3a6dd.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abcdef123456"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
