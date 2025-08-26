@@ -1,316 +1,327 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Login & Manajemen User</title>
-<style>
-/* ====== STYLE SAMA SEPERTI SEBELUMNYA ====== */
-:root {
-  --bg-dark: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  --bg-light: linear-gradient(135deg,#dfe9f3,#ffffff);
-  --card-dark: #1c2b36;
-  --card-light: #fff;
-  --text-dark: #fff;
-  --text-light: #333;
-}
-body {
-  font-family:"Segoe UI", Tahoma, sans-serif;
-  background: var(--bg-dark);
-  color: var(--text-dark);
-  margin:0; padding:20px;
-  display:flex; justify-content:center; align-items:center;
-  min-height:100vh;
-  transition: background 0.6s, color 0.6s;
-}
-.container {
-  width:100%; max-width:1200px;
-  background:var(--card-dark); color:var(--text-dark);
-  border-radius:15px; padding:20px;
-  box-shadow:0 8px 25px rgba(0,0,0,0.3);
-  opacity:0; transform:translateY(30px);
-  transition:all 0.6s ease;
-}
-.container.show { opacity:1; transform:translateY(0); }
-h2{text-align:center;margin-bottom:20px;}
-h3{margin:15px 0 10px;color:#00c6ff;}
-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:20px;}
-input,select{padding:10px;border:1px solid #ccc;border-radius:8px;transition:border 0.3s;}
-input:focus{border-color:#2575fc;outline:none;}
-button{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:14px;transition:all 0.3s ease;}
-.btn-primary{background:#2575fc;color:#fff;}
-.btn-primary:hover{background:#1d5fd1;transform:scale(1.05);}
-.btn-danger{background:#e74c3c;color:#fff;}
-.btn-danger:hover{background:#c0392b;transform:scale(1.05);}
-.btn-warning{background:#f39c12;color:#fff;}
-.btn-warning:hover{background:#d68910;transform:scale(1.05);}
-.user-table{width:100%;border-collapse:collapse;margin-top:10px;}
-.user-table th,.user-table td{border:1px solid #444;padding:10px;text-align:center;}
-.user-table th{background:#2575fc;color:#fff;}
-.user-table tr{transition:background 0.3s;}
-.user-table tr:hover{background:rgba(255,255,255,0.1);}
-.hidden{display:none;}
-.light-mode{background:var(--bg-light);color:var(--text-light);}
-.light-mode .container{background:var(--card-light);color:var(--text-light);}
-.light-mode .user-table th{background:#444;}
-.toast{position:fixed;top:20px;right:20px;background:#2575fc;color:#fff;padding:10px 20px;border-radius:10px;opacity:0;transform:translateY(-20px);transition:all 0.5s ease;z-index:9999;}
-.toast.show{opacity:1;transform:translateY(0);}
-</style>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-</head>
-<body>
+Hapus tombol simulator
 
-<!-- TOAST -->
-<div id="toast" class="toast"></div>
+<!DOCTYPE html>  <html lang="id">  
+<head>  
+<meta charset="UTF-8">  
+<title>IoT Dashboard</title>  
+<style>  
+body { font-family:"Segoe UI", Tahoma, sans-serif; background:linear-gradient(135deg,#6a11cb,#2575fc); color:#333; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; flex-direction:column; }  
+.container { width:100%; max-width:800px; background:#fff; padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.2); animation:fadeIn 0.8s ease-in-out; }  
+h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }  
+h3 { color:#2575fc; text-align:center; }  
+input { width:90%; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:14px; }  
+button { padding:10px 16px; margin:5px; border:none; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }  
+.btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }  
+.btn-primary:hover { transform:translateY(-2px); opacity:0.9; }  
+.btn-danger { background:#ff4d4d; color:#fff; }  
+.btn-danger:hover { background:#e03b3b; }  
+a { color:#2575fc; cursor:pointer; text-decoration:none; }  
+a:hover { text-decoration:underline; }  
+.page { display:none; }  
+.active { display:block; }  
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }  
+.card { background:#f8f9ff; padding:15px; border-radius:12px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); position:relative; }  
+.card span { font-size:16px; font-weight:bold; color:#2575fc; display:block; margin-bottom:8px; }  
+.card button { margin-top:5px; display:inline-block; }  
+canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; }  
+.btn-group { text-align:center; margin-top:15px; }  
+.error { color:red; font-size:13px; text-align:center; margin-top:-5px; margin-bottom:8px; }  
+@keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }  
+.footer { margin-top:15px; font-size:12px; color:#fff; text-align:center; }  
+</style>  
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  
+</head>  
+<body>  
+<div class="container">  
+  <h2 id="controllerTitle">⚡ IoT Dashboard</h2>    <!-- Register -->    <div id="registerPage" class="page active">  
+    <h3>Daftar Akun</h3>  
+    <input type="text" id="regEmail" placeholder="Email">  
+    <div id="regEmailError" class="error"></div>  
+    <input type="password" id="regPassword" placeholder="Password">  
+    <input type="text" id="regToken" placeholder="Token Acak (misal: token123)">  
+    <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">  
+    <div style="text-align:center;">  
+      <button class="btn-primary" onclick="registerUser()">Daftar</button>  
+    </div>  
+    <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>  
+  </div>    <!-- Login -->    <div id="loginPage" class="page">  
+    <h3>Login</h3>  
+    <input type="text" id="logEmail" placeholder="Email">  
+    <input type="password" id="logPassword" placeholder="Password">  
+    <div style="text-align:center;">  
+      <button class="btn-primary" onclick="loginUser()">Login</button>  
+    </div>  
+    <p style="text-align:center;">Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>  
+    <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>  
+  </div>    <!-- Panel -->    <div id="panelPage" class="page">  
+    <h3 id="panelTitle">Panel IoT</h3>  
+    <p id="panelInfo" style="text-align:center;"></p>  <div class="card-grid">  
+  <div class="card">Voltage: <br><span id="voltageVal">0</span> V</div>  
+  <div class="card">Ampere: <br><span id="ampereVal">0</span> A</div>  
+</div>  
 
-<!-- TOGGLE MODE -->
-<button id="toggleMode" style="position:fixed;bottom:20px;right:20px;z-index:1000;" class="btn-primary">🌙 Mode</button>
+<!-- Daftar user token hanya admin -->  
+<h3 id="userListTitle" style="display:none;">Pengguna Token Ini</h3>  
+<div id="userList" class="card-grid"></div>  
 
-<!-- LOGIN PAGE -->
-<div class="container show" id="loginPage">
-  <h2>🔐 Login Developer</h2>
-  <form id="loginForm">
-    <input type="text" id="loginEmail" placeholder="Username / Email" required>
-    <input type="password" id="loginPassword" placeholder="Password" required>
-    <button type="submit" class="btn-primary">Login</button>
-  </form>
+<canvas id="voltageChart"></canvas>  
+<canvas id="ampereChart"></canvas>  
+
+<div class="btn-group">  
+  <button id="btnOn" class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>  
+  <button id="btnOff" class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>  
+  <!-- Tombol tambah token dihapus -->  
+  <button class="btn-primary" onclick="window.open('https://miftahudincah.github.io/tesiot/','_blank')">🖥️ Simulasi</button>  
+  <button class="btn-danger" onclick="logout()">🚪 Logout</button>  
 </div>
 
-<!-- DASHBOARD PAGE -->
-<div class="container hidden" id="dashboard">
-  <h2>👨‍💻 Developer - Manajemen User</h2>
-
-  <h3>🔑 Ganti Password</h3>
-  <form id="changePassForm">
-    <input type="password" id="newPassword" placeholder="Password Baru" required>
-    <button type="submit" class="btn-primary">Ganti Password</button>
-  </form>
-
-  <h3>➕ Tambah User Baru</h3>
-  <form id="addUserForm">
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="text" id="password" placeholder="Password" required>
-    <input type="text" id="token" placeholder="Token" required>
-    <input type="text" id="ibu" placeholder="Nama Ibu Kandung" required>
-    <select id="isAdmin">
-      <option value="false">User Biasa</option>
-      <option value="true">Admin</option>
-    </select>
-    <button type="submit" class="btn-primary">Tambah User</button>
-  </form>
-
-  <h3>📋 Daftar User</h3>
-  <table class="user-table" id="userTable">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Password</th>
-        <th>Token</th>
-        <th>Nama Ibu</th>
-        <th>Admin?</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h3>🔑 Daftar Token</h3>
-  <table class="user-table" id="tokenTable">
-    <thead>
-      <tr>
-        <th>Token</th>
-        <th>Jumlah User</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-<script>
-// Firebase Config
-const firebaseConfig={ databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/" };
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-
-const defaultUserId="zaki5go".replace(/\W/g,"_");
-db.ref("users/"+defaultUserId).get().then(snap=>{
-  if(!snap.exists()){
-    db.ref("users/"+defaultUserId).set({
-      email:"zaki5go",
-      password:"miftahuddin9",
-      token:"developer",
-      ibu:"default",
-      isAdmin:true
-    });
-  }
-});
-
-// Toast Function
-function showToast(msg,color="#2575fc"){
-  const t=document.getElementById("toast");
-  t.textContent=msg;
-  t.style.background=color;
-  t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),3000);
-}
-
-// LOGIN
-document.getElementById("loginForm").addEventListener("submit", e=>{
-  e.preventDefault();
-  const email=document.getElementById("loginEmail").value.trim();
-  const pass=document.getElementById("loginPassword").value.trim();
-  const userId=email.replace(/\W/g,"_");
-  db.ref("users/"+userId).get().then(snap=>{
-    if(snap.exists()){
-      const u=snap.val();
-      if(u.password===pass){
-        showToast("✅ Login berhasil!","green");
-        document.getElementById("loginPage").classList.add("hidden");
-        const dash=document.getElementById("dashboard");
-        dash.classList.remove("hidden");
-        setTimeout(()=>dash.classList.add("show"),50);
-        loadAllUsers();
-        loadAllTokens();
-      } else {
-        showToast("❌ Password salah!","red");
-      }
-    } else {
-      showToast("❌ User tidak ditemukan!","red");
-    }
-  });
-});
-
-// GANTI PASSWORD
-document.getElementById("changePassForm").addEventListener("submit", e=>{
-  e.preventDefault();
-  const newPass=document.getElementById("newPassword").value.trim();
-  if(!newPass){ showToast("⚠️ Password tidak boleh kosong!","orange"); return; }
-  db.ref("users/"+defaultUserId).update({password:newPass}).then(()=>{
-    showToast("🔑 Password berhasil diganti!","green");
-    document.getElementById("changePassForm").reset();
-  });
-});
-
-// TAMBAH USER
-document.getElementById("addUserForm").addEventListener("submit", e=>{
-  e.preventDefault();
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  const token=document.getElementById("token").value.trim();
-  const ibu=document.getElementById("ibu").value.trim();
-  const isAdmin=document.getElementById("isAdmin").value==="true";
-  if(!email||!password||!token||!ibu){ showToast("⚠️ Lengkapi semua data!","orange"); return; }
-  const userId=email.replace(/\W/g,"_");
-  db.ref("users/"+userId).set({email,password,token,ibu,isAdmin}).then(()=>{
-    showToast("✅ User berhasil ditambahkan!","green");
-    document.getElementById("addUserForm").reset();
-    loadAllUsers(); loadAllTokens();
-  });
-});
-
-// LOAD USER
-function loadAllUsers(){
-  const tbody=document.querySelector("#userTable tbody");
-  tbody.innerHTML="";
-  db.ref("users").get().then(snap=>{
-    if(snap.exists()){
-      const users=snap.val();
-      for(const key in users){
-        const u=users[key];
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td>${u.email}</td>
-          <td>${u.password}</td>
-          <td>${u.token||"-"}</td>
-          <td>${u.ibu||"-"}</td>
-          <td>${u.isAdmin?"✅":"❌"}</td>
-          <td>
-            <button class="btn-warning" onclick="toggleAdmin('${u.email}',${u.isAdmin})">
-              ${u.isAdmin?"Jadikan User":"Jadikan Admin"}
-            </button>
-            <button class="btn-danger" onclick="deleteUser('${u.email}')">Hapus</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-    } else {
-      tbody.innerHTML=`<tr><td colspan="6">Belum ada user</td></tr>`;
-    }
-  });
-}
-
-// HAPUS USER
-function deleteUser(email){
-  if(confirm("Yakin ingin menghapus user: "+email+" ?")){
-    const userId=email.replace(/\W/g,"_");
-    db.ref("users/"+userId).remove().then(()=>{
-      showToast("🗑️ User "+email+" berhasil dihapus!","red");
-      loadAllUsers(); loadAllTokens();
-    });
-  }
-}
-
-// TOGGLE ADMIN
-function toggleAdmin(email,isAdmin){
-  const userId=email.replace(/\W/g,"_");
-  db.ref("users/"+userId).update({isAdmin:!isAdmin}).then(()=>{
-    showToast("🔄 Status admin diubah!","blue");
-    loadAllUsers();
-  });
-}
-
-// LOAD TOKEN
-function loadAllTokens(){
-  const tbody=document.querySelector("#tokenTable tbody");
-  tbody.innerHTML="";
-  db.ref("users").get().then(snap=>{
-    if(snap.exists()){
-      const users=snap.val();
-      const tokenCount={};
-      for(const key in users){
-        const token=users[key].token||"-";
-        if(!tokenCount[token]) tokenCount[token]=0;
-        tokenCount[token]++;
-      }
-      for(const token in tokenCount){
-        const tr=document.createElement("tr");
-        tr.innerHTML=`
-          <td>${token}</td>
-          <td>${tokenCount[token]} user</td>
-          <td><button class="btn-danger" onclick="deleteToken('${token}')">Hapus Token</button></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    } else {
-      tbody.innerHTML=`<tr><td colspan="3">Belum ada token</td></tr>`;
-    }
-  });
-}
-
-// HAPUS TOKEN
-function deleteToken(token){
-  if(token==="-"||token==="developer"){ showToast("⚠️ Token ini tidak bisa dihapus!","orange"); return; }
-  if(confirm("Yakin ingin menghapus token: "+token+" ?")){
-    db.ref("users").get().then(snap=>{
-      if(snap.exists()){
-        const users=snap.val();
-        for(const key in users){
-          if(users[key].token===token){
-            db.ref("users/"+key).update({token:""});
-          }
-        }
-        showToast("🗑️ Token "+token+" berhasil dihapus!","red");
-        loadAllTokens(); loadAllUsers();
-      }
-    });
-  }
-}
-
-// TOGGLE MODE
-document.getElementById("toggleMode").addEventListener("click",()=>{
-  document.body.classList.toggle("light-mode");
-});
-</script>
-</body>
+  </div>  
+</div>  <!-- Footer -->  <div class="footer">  
+  Pembuat miftahuddin wardani  
+</div>  <script>  
+const firebaseConfig={databaseURL:"https://esp32-3a6dd-default-rtdb.firebaseio.com/"};   
+firebase.initializeApp(firebaseConfig);   
+const db=firebase.database();  
+  
+let currentUser=null, currentToken=null, isAdmin=false;  
+let voltageChart=null, ampereChart=null;  
+let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];  
+let panelRef=null;  
+  
+function showPage(id){  
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));  
+  document.getElementById(id).classList.add('active');  
+  if(id==="registerPage") document.getElementById("regEmailError").innerText="";  
+}  
+  
+function isValidEmail(email){ return email.includes('@') && email.includes('.'); }  
+  
+// ================= REGISTER ==================  
+function registerUser(){  
+  const email=document.getElementById('regEmail').value.trim();  
+  const pass=document.getElementById('regPassword').value.trim();  
+  const token=document.getElementById('regToken').value.trim();  
+  const ibu=document.getElementById('regIbu').value.trim();  
+  const errorBox=document.getElementById("regEmailError");  
+  errorBox.innerText="";  
+  
+  if(!email||!pass||!token||!ibu){   
+    alert("Lengkapi semua data!");   
+    return;   
+  }  
+  if(!isValidEmail(email)){   
+    errorBox.innerText="Format email tidak valid!";   
+    return;   
+  }  
+  
+  db.ref("panel/"+token).get().then(panelSnap=>{  
+    if(!panelSnap.exists()){  
+      alert("❌ Token tidak terdaftar di panel, registrasi gagal!");  
+      return;  
+    }  
+  
+    const userId=email.replace(/\W/g,"_");  
+    db.ref("users/"+userId).get().then(snap=>{  
+      if(snap.exists()){   
+        errorBox.innerText="Email sudah terpakai!";   
+      } else {   
+        db.ref("users/"+userId).set({  
+          email,  
+          password:pass,  
+          token,  
+          ibu,  
+          isAdmin:false  
+        }).then(()=>{  
+          alert("✅ Registrasi berhasil.");  
+          showPage("loginPage");   
+        });   
+      }  
+    });  
+  });  
+}  
+  
+// ================= LOGIN ==================  
+function loginUser(){  
+  const email=document.getElementById('logEmail').value;  
+  const pass=document.getElementById('logPassword').value;  
+  const userId=email.replace(/\W/g,"_");  
+  db.ref("users/"+userId).get().then(snap=>{  
+    if(snap.exists()){  
+      const data=snap.val();  
+      if(data.password===pass){  
+        currentUser=email;   
+        currentToken=data.token;  
+        isAdmin = data.isAdmin || false;  
+        document.getElementById("panelInfo").innerText="Login sebagai: "+email+" | Token: "+currentToken + (isAdmin ? " | Admin" : "");  
+        document.getElementById("controllerTitle").innerText="⚡ IoT Dashboard - "+currentToken;  
+        document.getElementById("panelTitle").innerText="Panel IoT - "+currentToken;  
+        showPage("panelPage");  
+        resetCharts();  
+        setupCharts();  
+        listenPanel();  
+        loadUsersByToken();  
+        updateAdminUI();  
+      } else alert("Password salah!");  
+    } else alert("User tidak ditemukan!");  
+  });  
+}  
+  
+function updateAdminUI(){  
+  document.getElementById("btnOn").style.display = isAdmin ? "inline-block" : "none";  
+  document.getElementById("btnOff").style.display = isAdmin ? "inline-block" : "none";  
+  document.getElementById("userListTitle").style.display = isAdmin ? "block" : "none";  
+}  
+  
+// ================= LISTEN PANEL ==================  
+function listenPanel(){  
+  if(panelRef) panelRef.off();  
+  panelRef = db.ref("panel/"+currentToken);  
+  panelRef.on("value", snap=>{  
+    const d = snap.val();  
+    if(!d){  
+      document.getElementById("voltageVal").innerText=0;  
+      document.getElementById("ampereVal").innerText=0;  
+      return;  
+    }  
+    document.getElementById("voltageVal").innerText=d.voltage||0;  
+    document.getElementById("ampereVal").innerText=d.ampere||0;  
+    addData(voltageChart, voltageData, voltageLabels, d.voltage||0);  
+    addData(ampereChart, ampereData, ampereLabels, d.ampere||0);  
+  });  
+}  
+  
+function sendCommand(cmd){  
+  if(currentToken && isAdmin){  
+    db.ref("panel/"+currentToken).update({  
+      status:cmd,  
+      updatedBy:currentUser,  
+      updatedAt:new Date().toLocaleString()  
+    });  
+  } else alert("Hanya admin yang bisa mengontrol ON/OFF!");  
+}  
+  
+function logout(){  
+  currentUser=null; currentToken=null; isAdmin=false;  
+  if(voltageChart) voltageChart.destroy();  
+  if(ampereChart) ampereChart.destroy();  
+  if(panelRef) panelRef.off();  
+  showPage("loginPage");  
+}  
+  
+function forgotPassword(){  
+  const email=prompt("Masukkan email Anda:");  
+  const ibu=prompt("Masukkan nama ibu kandung:");  
+  const userId=email.replace(/\W/g,"_");  
+  db.ref("users/"+userId).get().then(snap=>{  
+    if(snap.exists()){  
+      const data=snap.val();  
+      if(data.ibu && data.ibu.toLowerCase()===ibu.toLowerCase()){  
+        const newPass=prompt("Jawaban benar. Masukkan password baru:");  
+        if(newPass) db.ref("users/"+userId+"/password").set(newPass).then(()=>alert("Password berhasil direset."));  
+      } else alert("Jawaban salah!");  
+    } else alert("User tidak ditemukan!");  
+  });  
+}  
+  
+// ================= CHART ==================  
+function resetCharts(){  
+  voltageData=[]; voltageLabels=[]; ampereData=[]; ampereLabels=[];  
+  if(voltageChart) voltageChart.destroy();  
+  if(ampereChart) ampereChart.destroy();  
+}  
+  
+function setupCharts(){  
+  if(!voltageChart){  
+    voltageChart=new Chart(document.getElementById('voltageChart').getContext('2d'),{  
+      type:'line',  
+      data:{  
+        labels:voltageLabels,  
+        datasets:[{  
+          label:'Voltage',  
+          data:voltageData,  
+          borderColor:'#2575fc',  
+          backgroundColor:'rgba(37,117,252,0.2)',  
+          tension:0.3  
+        }]  
+      },  
+      options:{  
+        responsive:true,  
+        scales:{ y:{ beginAtZero:true } }  
+      }  
+    });  
+  }  
+  if(!ampereChart){  
+    ampereChart=new Chart(document.getElementById('ampereChart').getContext('2d'),{  
+      type:'line',  
+      data:{  
+        labels:ampereLabels,  
+        datasets:[{  
+          label:'Ampere',  
+          data:ampereData,  
+          borderColor:'#ff9500',  
+          backgroundColor:'rgba(255,149,0,0.2)',  
+          tension:0.3  
+        }]  
+      },  
+      options:{  
+        responsive:true,  
+        scales:{ y:{ beginAtZero:true } }  
+      }  
+    });  
+  }  
+}  
+  
+function addData(chart, dataArr, labelArr, value){  
+  const now=new Date().toLocaleTimeString();  
+  dataArr.push(value);   
+  labelArr.push(now);  
+  if(dataArr.length>10){   
+    dataArr.shift();   
+    labelArr.shift();   
+  }  
+  chart.update();  
+}  
+  
+// ================= USER MANAGEMENT ==================  
+function loadUsersByToken(){  
+  const listEl = document.getElementById("userList");  
+  listEl.innerHTML = "";  
+  if(!isAdmin) return; // hanya admin  
+  db.ref("users").get().then(snap=>{  
+    if(snap.exists()){  
+      const users = snap.val();  
+      for(const key in users){  
+        if(users[key].token === currentToken){  
+          const card = document.createElement("div");  
+          card.className = "card";  
+          const emailSpan = document.createElement("span");  
+          emailSpan.innerText = users[key].email + (users[key].isAdmin ? " (Admin)" : "");  
+          card.appendChild(emailSpan);  
+  
+          if(users[key].email !== currentUser){  
+            const delBtn = document.createElement("button");  
+            delBtn.className="btn-danger";  
+            delBtn.innerText="Hapus";  
+            delBtn.onclick = ()=>deleteUser(users[key].email);  
+            card.appendChild(delBtn);  
+          }  
+          listEl.appendChild(card);  
+        }  
+      }  
+    }  
+  });  
+}  
+  
+function deleteUser(email){  
+  if(confirm("Yakin ingin menghapus user: "+email+" ?")){  
+    const userId = email.replace(/\W/g,"_");  
+    db.ref("users/"+userId).remove().then(()=>{  
+      alert("User "+email+" berhasil dihapus!");  
+      loadUsersByToken();  
+    });  
+  }  
+}  
+</script>  </body>  
 </html>
