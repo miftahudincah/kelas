@@ -13,24 +13,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
+* { box-sizing: border-box; }
 body {
   font-family:"Segoe UI", Tahoma, sans-serif;
   background:linear-gradient(135deg,#6a11cb,#2575fc);
-  margin:0;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
+  margin:0; min-height:100vh;
+  display:flex; justify-content:center; align-items:center; padding:20px;
   color:#333;
 }
 .container {
-  width:100%;
-  max-width:950px;
-  background:#fff;
-  padding:30px;
-  border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  width:100%; max-width:950px; background:#fff;
+  padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.25);
   animation:fadeIn 0.8s ease-in-out;
 }
 h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
@@ -215,7 +208,6 @@ function loginUser(){
         currentToken = data.token;
         isAdmin = data.isAdmin || false;
 
-        // Simpan ke localStorage
         localStorage.setItem("currentUser", currentUser);
         localStorage.setItem("currentToken", currentToken);
         localStorage.setItem("isAdmin", isAdmin);
@@ -229,59 +221,68 @@ function loginUser(){
 
 /* === LOGOUT === */
 function logout(){
-  currentUser = null;
-  currentToken = null;
-  isAdmin = false;
-  voltageData = [];
-  voltageLabels = [];
-  ampereData = [];
-  ampereLabels = [];
-  if(voltageChart) voltageChart.destroy();
-  if(ampereChart) ampereChart.destroy();
+  currentUser = null; currentToken = null; isAdmin = false;
+  voltageData = []; voltageLabels = []; ampereData = []; ampereLabels = [];
+  if(voltageChart) voltageChart.destroy(); voltageChart=null;
+  if(ampereChart) ampereChart.destroy(); ampereChart=null;
+  panelRef=null;
 
-  // Hapus dari localStorage
-  localStorage.removeItem("currentUser");
-  localStorage.removeItem("currentToken");
-  localStorage.removeItem("isAdmin");
-
+  localStorage.clear();
   showPage("loginPage");
 }
 
 /* === PANEL INIT === */
 function initPanel(token){
+  if(!token) return;
   panelRef = db.ref("panel/" + token);
 
-  panelRef.on("value", snap => {
-    const data = snap.val();
-    if(!data) return;
+  // Tampilkan tombol ON/OFF hanya untuk admin
+  const btnOn = document.getElementById("btnOn");
+  const btnOff = document.getElementById("btnOff");
+  if(isAdmin){
+    btnOn.style.display = "inline-block";
+    btnOff.style.display = "inline-block";
+  } else {
+    btnOn.style.display = "none";
+    btnOff.style.display = "none";
+  }
 
+  panelRef.on("value", snap => {
+    const data = snap.val(); if(!data) return;
     document.getElementById("voltageVal").innerText = data.voltage || 0;
     document.getElementById("ampereVal").innerText = data.ampere || 0;
-    document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
+document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
 
-    const now = new Date().toLocaleTimeString();
-    voltageData.push(data.voltage || 0); voltageLabels.push(now);
-    ampereData.push(data.ampere || 0); ampereLabels.push(now);
-    if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
-    if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
+const now = new Date().toLocaleTimeString();
+voltageData.push(data.voltage || 0);
+voltageLabels.push(now);
+ampereData.push(data.ampere || 0);
+ampereLabels.push(now);
 
-    updateCharts();
-  });
+// Batasi history chart 20 data terakhir
+if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
+if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
 
-  db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
-    const users = snap.val();
-    const userListDiv = document.getElementById("userList");
-    userListDiv.innerHTML = "";
-    if(users){
-      document.getElementById("userListTitle").style.display = "block";
-      Object.values(users).forEach(u=>{
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = u.email;
-        userListDiv.appendChild(card);
-      });
-    }
-  });
+updateCharts();
+});
+
+// Tampilkan list pengguna yang menggunakan token ini
+db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
+  const users = snap.val();
+  const userListDiv = document.getElementById("userList");
+  userListDiv.innerHTML = "";
+  if(users){
+    document.getElementById("userListTitle").style.display = "block";
+    Object.values(users).forEach(u => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerText = u.email;
+      userListDiv.appendChild(card);
+    });
+  } else {
+    document.getElementById("userListTitle").style.display = "none";
+  }
+});
 }
 
 /* === UPDATE CHARTS === */
@@ -289,9 +290,9 @@ function updateCharts(){
   if(!voltageChart){
     const ctxV = document.getElementById("voltageChart").getContext("2d");
     voltageChart = new Chart(ctxV, {
-      type:"line",
-      data:{labels: voltageLabels, datasets:[{label:"Voltage (V)", data:voltageData, borderColor:"#2575fc", fill:false, tension:0.3}]},
-      options:{responsive:true, animation:false, scales:{y:{beginAtZero:true}}}
+      type: "line",
+      data: { labels: voltageLabels, datasets: [{ label:"Voltage (V)", data: voltageData, borderColor:"#2575fc", fill:false, tension:0.3 }] },
+      options: { responsive:true, animation:false, scales:{ y:{ beginAtZero:true } } }
     });
   } else {
     voltageChart.data.labels = voltageLabels;
@@ -302,20 +303,20 @@ function updateCharts(){
   if(!ampereChart){
     const ctxA = document.getElementById("ampereChart").getContext("2d");
     ampereChart = new Chart(ctxA, {
-      type:"line",
-      data:{labels: ampereLabels, datasets:[{label:"Ampere (A)", data:ampereData, borderColor:"#6a11cb", fill:false, tension:0.3}]},
-      options:{responsive:true, animation:false, scales:{y:{beginAtZero:true}}}
+      type: "line",
+      data: { labels: ampereLabels, datasets: [{ label:"Ampere (A)", data: ampereData, borderColor:"#6a11cb", fill:false, tension:0.3 }] },
+      options: { responsive:true, animation:false, scales:{ y:{ beginAtZero:true } } }
     });
   } else {
     ampereChart.data.labels = ampereLabels;
-    ampereChart.data.datasets[0].data = ampereChart.data.datasets[0].data = ampereData;
+    ampereChart.data.datasets[0].data = ampereData;
     ampereChart.update();
   }
 }
 
 /* === KIRIM COMMAND ON/OFF === */
 function sendCommand(cmd){
-  if(!panelRef) return;
+  if(!panelRef || !isAdmin) return; // Hanya admin bisa mengirim command
   panelRef.update({status: cmd});
 }
 
@@ -351,4 +352,4 @@ window.addEventListener("load", ()=>{
 });
 </script>
 </body>
-                                                               </html>
+</html>
