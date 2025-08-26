@@ -13,7 +13,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* === GLOBAL === */
 body {
   font-family:"Segoe UI", Tahoma, sans-serif;
   background:linear-gradient(135deg,#6a11cb,#2575fc);
@@ -47,45 +46,15 @@ a { color:#2575fc; cursor:pointer; text-decoration:none; }
 a:hover { text-decoration:underline; }
 .page { display:none; }
 .active { display:block; }
-
-/* === CARD GRID === */
-.card-grid {
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:15px;
-  margin:15px 0;
-}
-.card {
-  background:#f8f9ff;
-  padding:20px;
-  border-radius:15px;
-  text-align:center;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
-  transition:0.3s;
-}
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }
+.card { background:#f8f9ff; padding:20px; border-radius:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition:0.3s; }
 .card:hover { transform:translateY(-5px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
 .card span { font-size:18px; font-weight:bold; color:#2575fc; display:block; margin-top:8px; }
-
-canvas {
-  background:#fff;
-  border-radius:12px;
-  padding:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
-  margin-top:20px;
-  width:100% !important;
-  height:auto !important;
-}
+canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; width:100% !important; height:auto !important; }
 .btn-group { text-align:center; margin-top:20px; }
 .error { color:red; font-size:13px; text-align:center; margin-bottom:8px; }
 .footer { margin-top:20px; font-size:13px; color:#fff; text-align:center; }
-
-/* === ANIMASI === */
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(-20px); }
-  to { opacity:1; transform:translateY(0); }
-}
-
-/* === RESPONSIVE === */
+@keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
 @media (max-width:600px){
   .container { padding:20px; }
   h2 { font-size:1.6rem; }
@@ -113,7 +82,7 @@ canvas {
   </div>
 
   <!-- LOGIN PAGE -->
-  <div id="loginPage" class="page active">
+  <div id="loginPage" class="page">
     <h3>Login</h3>
     <input type="text" id="logEmail" placeholder="Email">
     <input type="password" id="logPassword" placeholder="Password">
@@ -245,14 +214,16 @@ function loginUser(){
         currentUser = email;
         currentToken = data.token;
         isAdmin = data.isAdmin || false;
+
+        // Simpan ke localStorage
+        localStorage.setItem("currentUser", currentUser);
+        localStorage.setItem("currentToken", currentToken);
+        localStorage.setItem("isAdmin", isAdmin);
+
         showPage("panelPage");
         initPanel(currentToken);
-      } else {
-        alert("❌ Password salah!");
-      }
-    } else {
-      alert("❌ User tidak ditemukan!");
-    }
+      } else { alert("❌ Password salah!"); }
+    } else { alert("❌ User tidak ditemukan!"); }
   });
 }
 
@@ -267,6 +238,12 @@ function logout(){
   ampereLabels = [];
   if(voltageChart) voltageChart.destroy();
   if(ampereChart) ampereChart.destroy();
+
+  // Hapus dari localStorage
+  localStorage.removeItem("currentUser");
+  localStorage.removeItem("currentToken");
+  localStorage.removeItem("isAdmin");
+
   showPage("loginPage");
 }
 
@@ -274,30 +251,23 @@ function logout(){
 function initPanel(token){
   panelRef = db.ref("panel/" + token);
 
-  // Update data realtime
   panelRef.on("value", snap => {
     const data = snap.val();
     if(!data) return;
 
-    // Update card
     document.getElementById("voltageVal").innerText = data.voltage || 0;
     document.getElementById("ampereVal").innerText = data.ampere || 0;
     document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
 
-    // Update chart
     const now = new Date().toLocaleTimeString();
-    voltageData.push(data.voltage || 0);
-    voltageLabels.push(now);
-    ampereData.push(data.ampere || 0);
-    ampereLabels.push(now);
-
+    voltageData.push(data.voltage || 0); voltageLabels.push(now);
+    ampereData.push(data.ampere || 0); ampereLabels.push(now);
     if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
     if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
 
     updateCharts();
   });
 
-  // Tampilkan list user yang pakai token
   db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
     const users = snap.val();
     const userListDiv = document.getElementById("userList");
@@ -338,36 +308,47 @@ function updateCharts(){
     });
   } else {
     ampereChart.data.labels = ampereLabels;
-    ampereChart.data.datasets[0].data = ampereData;
+    ampereChart.data.datasets[0].data = ampereChart.data.datasets[0].data = ampereData;
     ampereChart.update();
   }
 }
 
-/* === SEND COMMAND === */
+/* === KIRIM COMMAND ON/OFF === */
 function sendCommand(cmd){
   if(!panelRef) return;
   panelRef.update({status: cmd});
-  alert("✅ Command " + cmd + " terkirim!");
 }
 
-/* === UTILITY === */
-function showPage(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
-function isValidEmail(email){ return email.includes("@") && email.includes("."); }
-
+/* === FORGOT PASSWORD === */
 function forgotPassword(){
-  const email = prompt("Masukkan email untuk reset password:");
-  if(!email){ alert("Email wajib diisi!"); return; }
-  const userId = email.replace(/\W/g,"_");
-  db.ref("users/"+userId).get().then(snap=>{
+  const email = prompt("Masukkan email Anda untuk reset password:");
+  if(!email) return;
+  const userId = email.replace(/\W/g, "_");
+  db.ref("users/" + userId).get().then(snap=>{
     if(snap.exists()){
-      alert("Password Anda: " + snap.val().password);
-    } else { alert("❌ User tidak ditemukan!"); }
+      const newPass = prompt("Masukkan password baru:");
+      if(newPass){
+        db.ref("users/" + userId + "/password").set(newPass);
+        alert("✅ Password berhasil diubah.");
+      }
+    } else alert("❌ Email tidak terdaftar.");
   });
 }
+
+/* === CEK LOCALSTORAGE UNTUK LOGIN OTOMATIS === */
+window.addEventListener("load", ()=>{
+  const savedUser = localStorage.getItem("currentUser");
+  const savedToken = localStorage.getItem("currentToken");
+  const savedAdmin = localStorage.getItem("isAdmin") === "true";
+
+  if(savedUser && savedToken){
+    currentUser = savedUser;
+    currentToken = savedToken;
+    isAdmin = savedAdmin;
+    showPage("panelPage");
+    initPanel(currentToken);
+  } else showPage("loginPage");
+});
 </script>
 </body>
-</html>
+                                                               </html>
