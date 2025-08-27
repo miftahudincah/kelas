@@ -109,11 +109,11 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     </div>
   </div>
 
-  <div class="footer">Pembuat: miftahuddin wardani</div>
+  <div class="footer">Developed by Miftahudin Wardani</div>
 </div>
 
 <script>
-/* === FIREBASE CONFIG (ISI DENGAN PUNYA KAMU SENDIRI) === */
+/* === FIREBASE CONFIG === */
 const firebaseConfig = {
   apiKey: "ISI_API_KEY",
   authDomain: "esp32-3a6dd.firebaseapp.com",
@@ -133,10 +133,10 @@ let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
 let panelRef=null;
 
 /* === DEFAULT DEVELOPER === */
-const defaultDevId="zaki5go".replace(/\W/g,"_");
+const defaultDevId="miftahdev".replace(/\W/g,"_");
 db.ref("users/"+defaultDevId).get().then(snap=>{
   if(!snap.exists()){
-    db.ref("users/"+defaultDevId).set({email:"zaki5go", password:"miftahuddin9", token:"developer", ibu:"default", isAdmin:true});
+    db.ref("users/"+defaultDevId).set({email:"developer@app.com", password:"miftahudin9", token:"developer", ibu:"default", isAdmin:true});
     db.ref("panel/developer").set({voltage:0, ampere:0, status:"OFF"});
   }
 });
@@ -193,9 +193,6 @@ function registerUser(){
           alert("❌ Terjadi kesalahan saat registrasi.");
         });
       }
-    }).catch(err => {
-      console.error(err);
-      alert("❌ Gagal mengecek user di database.");
     });
   });
 }
@@ -324,19 +321,27 @@ function sendCommand(cmd){
   panelRef.update({status: cmd});
 }
 
-/* === FORGOT PASSWORD === */
+/* === FORGOT PASSWORD (dengan verifikasi Nama Ibu) === */
 function forgotPassword(){
   const email = prompt("Masukkan email Anda untuk reset password:");
   if(!email) return;
   const userId = email.replace(/\W/g, "_");
   db.ref("users/" + userId).get().then(snap=>{
     if(snap.exists()){
-      const newPass = prompt("Masukkan password baru:");
-      if(newPass){
-        db.ref("users/" + userId + "/password").set(newPass);
-        alert("✅ Password berhasil diubah.");
+      const data = snap.val();
+      const ibuInput = prompt("Masukkan nama ibu kandung Anda:");
+      if(ibuInput && ibuInput.toLowerCase() === data.ibu.toLowerCase()){
+        const newPass = prompt("Masukkan password baru:");
+        if(newPass){
+          db.ref("users/" + userId + "/password").set(newPass);
+          alert("✅ Password berhasil diubah.");
+        }
+      } else {
+        alert("❌ Nama ibu kandung tidak sesuai!");
       }
-    } else alert("❌ Email tidak terdaftar.");
+    } else {
+      alert("❌ Email tidak terdaftar.");
+    }
   });
 }
 
