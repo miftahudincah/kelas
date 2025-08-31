@@ -1,70 +1,57 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trainer SMK</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trainer SMK</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-* { box-sizing: border-box; }
-body {
-  font-family:"Segoe UI", Tahoma, sans-serif;
-  background:linear-gradient(135deg,#6a11cb,#2575fc);
-  margin:0; min-height:100vh;
-  display:flex; justify-content:center; align-items:center; padding:20px;
-  color:#333;
-}
-.container {
-  width:100%; max-width:950px; background:#fff;
-  padding:30px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.25);
-  animation:fadeIn 0.8s ease-in-out;
-}
-h2 { text-align:center; color:#6a11cb; margin-bottom:20px; }
-h3 { color:#2575fc; text-align:center; margin-bottom:15px; }
-input { width:100%; max-width:400px; padding:12px; margin:8px auto; border:1px solid #ddd; border-radius:10px; display:block; font-size:15px; transition:0.2s; }
-input:focus { outline:none; border-color:#6a11cb; box-shadow:0 0 5px rgba(106,17,203,0.5); }
-button { padding:10px 18px; margin:5px; border:none; border-radius:10px; font-size:15px; font-weight:bold; cursor:pointer; transition:all 0.3s ease; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
-.btn-primary { background:linear-gradient(135deg,#2575fc,#6a11cb); color:#fff; }
-.btn-primary:hover { transform:translateY(-2px) scale(1.05); }
-.btn-danger { background:#ff4d4d; color:#fff; }
-.btn-danger:hover { transform:scale(1.05); }
-a { color:#2575fc; cursor:pointer; text-decoration:none; }
-a:hover { text-decoration:underline; }
-.page { display:none; }
-.active { display:block; }
-.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin:15px 0; }
-.card { background:#f8f9ff; padding:20px; border-radius:15px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition:0.3s; }
-.card:hover { transform:translateY(-5px); box-shadow:0 8px 20px rgba(0,0,0,0.2); }
-.card span { font-size:18px; font-weight:bold; color:#2575fc; display:block; margin-top:8px; }
-canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); margin-top:20px; width:100% !important; height:auto !important; }
-.btn-group { text-align:center; margin-top:20px; }
-.error { color:red; font-size:13px; text-align:center; margin-bottom:8px; }
-.footer { margin-top:20px; font-size:13px; color:#fff; text-align:center; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
-@media (max-width:600px){
-  .container { padding:20px; }
-  h2 { font-size:1.6rem; }
-  h3 { font-size:1.2rem; }
-  button { font-size:14px; padding:8px 14px; }
-}
-</style>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+    .profile-pic { width:120px; height:120px; border-radius:50%; object-fit:cover; border:3px solid #4CAF50; display:block; margin:10px auto; }
+    #photoInput { margin-top:10px; display:block; margin-left:auto; margin-right:auto; }
+    #statusMsg { font-size:14px; color:#555; margin-top:8px; text-align:center; }
+    .user-item { display:flex; align-items:center; margin-bottom:8px; padding:5px; border-bottom:1px solid #ddd; }
+    .user-item img { width:35px; height:35px; border-radius:50%; margin-right:10px; object-fit:cover; }
+    .user-info { flex:1; }
+    .user-status { font-size:12px; }
+    .online { color:green; font-weight:bold; }
+    .offline { color:red; }
+    .card { padding:10px; margin:5px 0; border:1px solid #ccc; border-radius:5px; background:#fff; }
+    .card-grid { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
+    .btn-primary { padding:6px 12px; margin:2px; cursor:pointer; background:#2575fc; color:#fff; border:none; border-radius:4px; }
+    .btn-danger { padding:6px 12px; margin:2px; cursor:pointer; background:#fc4f4f; color:#fff; border:none; border-radius:4px; }
+    .page { display:none; padding:15px; }
+    .page.active { display:block; }
+    .dark-mode { background:#222; color:#ddd; }
+    .dark-mode .card { background:#333; border-color:#555; }
+    .dark-mode input, .dark-mode textarea { background:#444; color:#ddd; border:1px solid #666; }
+    input, textarea { width:100%; margin:5px 0; padding:5px; border-radius:4px; border:1px solid #ccc; }
+    .footer { text-align:center; margin-top:25px; font-size:14px; color:#777; }
+    .btn-group { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:15px; }
+  </style>
 </head>
 <body>
 <div class="container">
-  <h2 id="controllerTitle">⚡ Trainer SMK</h2>
+  <h2 id="controllerTitle" style="text-align:center;">⚡ Trainer SMK</h2>
+
+  <div style="text-align:center; margin-bottom:15px;">
+    <button class="btn-primary" onclick="toggleTheme()">🌙/☀️ Ganti Mode</button>
+  </div>
 
   <!-- REGISTER PAGE -->
   <div id="registerPage" class="page">
     <h3>Daftar Akun</h3>
     <input type="text" id="regEmail" placeholder="Email">
-    <div id="regEmailError" class="error"></div>
     <input type="password" id="regPassword" placeholder="Password">
     <input type="text" id="regToken" placeholder="Token Panel">
     <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
@@ -92,273 +79,78 @@ canvas { background:#fff; border-radius:12px; padding:10px; box-shadow:0 5px 15p
     <p id="panelInfo" style="text-align:center;"></p>
 
     <div class="card-grid">
-      <div class="card">Voltage<span id="voltageVal">0</span> V</div>
-      <div class="card">Ampere<span id="ampereVal">0</span> A</div>
+      <div class="card">Voltage: <span id="voltageVal">0</span> V</div>
+      <div class="card">Ampere: <span id="ampereVal">0</span> A</div>
     </div>
-
-    <h3 id="userListTitle" style="display:none;">Pengguna Token Ini</h3>
-    <div id="userList" class="card-grid"></div>
 
     <canvas id="voltageChart"></canvas>
     <canvas id="ampereChart"></canvas>
 
+    <h3 id="userListTitle" style="margin-top:20px;">Pengguna Token Ini</h3>
+    <div id="userList" class="card"></div>
+
     <div class="btn-group">
-      <button id="btnOn" class="btn-primary" onclick="sendCommand('ON')">🔵 ON</button>
-      <button id="btnOff" class="btn-primary" onclick="sendCommand('OFF')">⚪ OFF</button>
+      <button id="btnOn" class="btn-primary">🔵 ON</button>
+      <button id="btnOff" class="btn-primary">⚪ OFF</button>
+      <button id="btnOpenProfile" class="btn-primary">👤 Profil</button>
+      <button id="btnExam" class="btn-primary">📝 Ujian</button>
       <button class="btn-danger" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- PROFILE PAGE -->
+  <div id="profilePage" class="page">
+    <h3>Profil Saya</h3>
+    <img id="photoPreview" class="profile-pic" src="https://via.placeholder.com/120" alt="Foto Profil">
+    <input type="file" id="photoInput" accept="image/*">
+    <button id="btnSavePhoto" class="btn-primary" onclick="savePhoto()">Simpan Foto</button>
+    <p id="statusMsg"></p>
+
+    <div class="card">
+      <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
+      <p><strong>Token Panel:</strong> <span id="profileToken">-</span></p>
+      <p><strong>Nama Ibu Kandung:</strong> <span id="profileIbu">-</span></p>
+      <p><strong>Status:</strong> <span id="profileStatus">Offline</span></p>
+      <p><strong>Terakhir Online:</strong> <span id="profileLastLogin">-</span></p>
+      <p><strong>Role:</strong> <span id="profileRole">-</span></p>
+    </div>
+
+    <div style="text-align:center; margin-top:15px;">
+      <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
+    </div>
+  </div>
+
+  <!-- EXAM PAGE -->
+  <div id="examPage" class="page">
+    <h3>Ujian Online</h3>
+    <p>Kerjakan soal berikut:</p>
+    <div id="examList" class="card-grid"></div>
+
+    <div style="text-align:center; margin-top:15px;">
+      <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
     </div>
   </div>
 
   <div class="footer">Developed by Miftahudin Wardani</div>
 </div>
 
+<!-- Script utama -->
+<script src="script.js"></script>
 <script>
-/* === FIREBASE CONFIG === */
-const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "esp32-3a6dd.firebaseapp.com",
-  databaseURL: "https://esp32-3a6dd-default-rtdb.firebaseio.com/",
-  projectId: "esp32-3a6dd",
-  storageBucket: "esp32-3a6dd.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-/* === GLOBAL VARIABLES === */
-let currentUser=null, currentToken=null, isAdmin=false;
-let voltageChart=null, ampereChart=null;
-let voltageData=[], voltageLabels=[], ampereData=[], ampereLabels=[];
-let panelRef=null;
-
-/* === DEFAULT DEVELOPER === */
-const defaultDevId="miftahdev".replace(/\W/g,"_");
-db.ref("users/"+defaultDevId).get().then(snap=>{
-  if(!snap.exists()){
-    db.ref("users/"+defaultDevId).set({email:"developer@app.com", password:"miftahudin9", token:"developer", ibu:"default", isAdmin:true});
-    db.ref("panel/developer").set({voltage:0, ampere:0, status:"OFF"});
-  }
-});
-
-/* === PAGE SWITCH === */
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-/* === VALIDASI EMAIL === */
-function isValidEmail(email){ return email.includes('@') && email.includes('.'); }
-
-/* === REGISTER === */
-function registerUser(){
-  const email = document.getElementById('regEmail').value.trim();
-  const pass = document.getElementById('regPassword').value.trim();
-  const token = document.getElementById('regToken').value.trim();
-  const ibu = document.getElementById('regIbu').value.trim();
-  const errorBox = document.getElementById("regEmailError");
-  errorBox.innerText = "";
-
-  if(!email || !pass || !token || !ibu){
-    alert("Lengkapi semua data!");
-    return;
-  }
-  if(!isValidEmail(email)){
-    errorBox.innerText = "Format email tidak valid!";
-    return;
-  }
-
-  db.ref("panel/" + token).get().then(panelSnap => {
-    if(!panelSnap.exists()){
-      alert("❌ Token panel tidak ditemukan!");
-      return;
-    }
-
-    const userId = email.replace(/\W/g, "_");
-    db.ref("users/" + userId).get().then(snap => {
-      if(snap.exists()){
-        errorBox.innerText = "Email sudah terpakai!";
-      } else {
-        db.ref("users/" + userId).set({
-          email: email,
-          password: pass,
-          token: token,
-          ibu: ibu,
-          isAdmin: false
-        }).then(() => {
-          alert("✅ Registrasi berhasil. Silakan login.");
-          showPage("loginPage");
-        }).catch(err => {
-          console.error(err);
-          alert("❌ Terjadi kesalahan saat registrasi.");
-        });
-      }
-    });
+  // Tombol profil
+  document.getElementById("btnOpenProfile").addEventListener("click", () => {
+    if(currentUserId) openUserProfile(currentUserId);
+    else alert("❌ User belum login!");
   });
-}
 
-/* === LOGIN === */
-function loginUser(){
-  const email = document.getElementById('logEmail').value.trim();
-  const pass = document.getElementById('logPassword').value.trim();
-  if(!email || !pass){ alert("Isi email dan password!"); return; }
-
-  const userId = email.replace(/\W/g, "_");
-  db.ref("users/" + userId).get().then(snap => {
-    if(snap.exists()){
-      const data = snap.val();
-      if(data.password === pass){
-        currentUser = email;
-        currentToken = data.token;
-        isAdmin = data.isAdmin || false;
-
-        localStorage.setItem("currentUser", currentUser);
-        localStorage.setItem("currentToken", currentToken);
-        localStorage.setItem("isAdmin", isAdmin);
-
-        showPage("panelPage");
-        initPanel(currentToken);
-      } else { alert("❌ Password salah!"); }
-    } else { alert("❌ User tidak ditemukan!"); }
+  // Tombol ujian
+  document.getElementById("btnExam").addEventListener("click", () => {
+    showPage("examPage");
+    loadExam();
   });
-}
 
-/* === LOGOUT === */
-function logout(){
-  currentUser = null; currentToken = null; isAdmin = false;
-  voltageData = []; voltageLabels = []; ampereData = []; ampereLabels = [];
-  if(voltageChart) voltageChart.destroy(); voltageChart=null;
-  if(ampereChart) ampereChart.destroy(); ampereChart=null;
-  panelRef=null;
-
-  localStorage.clear();
+  // Default page
   showPage("loginPage");
-}
-
-/* === PANEL INIT === */
-function initPanel(token){
-  if(!token) return;
-  panelRef = db.ref("panel/" + token);
-
-  const btnOn = document.getElementById("btnOn");
-  const btnOff = document.getElementById("btnOff");
-  if(isAdmin){
-    btnOn.style.display = "inline-block";
-    btnOff.style.display = "inline-block";
-  } else {
-    btnOn.style.display = "none";
-    btnOff.style.display = "none";
-  }
-
-  panelRef.on("value", snap => {
-    const data = snap.val(); if(!data) return;
-    document.getElementById("voltageVal").innerText = data.voltage || 0;
-    document.getElementById("ampereVal").innerText = data.ampere || 0;
-    document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
-
-    const now = new Date().toLocaleTimeString();
-    voltageData.push(data.voltage || 0);
-    voltageLabels.push(now);
-    ampereData.push(data.ampere || 0);
-    ampereLabels.push(now);
-
-    if(voltageData.length > 20){ voltageData.shift(); voltageLabels.shift(); }
-    if(ampereData.length > 20){ ampereData.shift(); ampereLabels.shift(); }
-
-    updateCharts();
-  });
-
-  db.ref("users").orderByChild("token").equalTo(token).get().then(snap => {
-    const users = snap.val();
-    const userListDiv = document.getElementById("userList");
-    userListDiv.innerHTML = "";
-    if(users){
-      document.getElementById("userListTitle").style.display = "block";
-      Object.values(users).forEach(u => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerText = u.email;
-        userListDiv.appendChild(card);
-      });
-    } else {
-      document.getElementById("userListTitle").style.display = "none";
-    }
-  });
-}
-
-/* === UPDATE CHARTS === */
-function updateCharts(){
-  if(!voltageChart){
-    const ctxV = document.getElementById("voltageChart").getContext("2d");
-    voltageChart = new Chart(ctxV, {
-      type: "line",
-      data: { labels: voltageLabels, datasets: [{ label:"Voltage (V)", data: voltageData, borderColor:"#2575fc", fill:false, tension:0.3 }] },
-      options: { responsive:true, animation:false, scales:{ y:{ beginAtZero:true } } }
-    });
-  } else {
-    voltageChart.data.labels = voltageLabels;
-    voltageChart.data.datasets[0].data = voltageData;
-    voltageChart.update();
-  }
-
-  if(!ampereChart){
-    const ctxA = document.getElementById("ampereChart").getContext("2d");
-    ampereChart = new Chart(ctxA, {
-      type: "line",
-      data: { labels: ampereLabels, datasets: [{ label:"Ampere (A)", data: ampereData, borderColor:"#6a11cb", fill:false, tension:0.3 }] },
-      options: { responsive:true, animation:false, scales:{ y:{ beginAtZero:true } } }
-    });
-  } else {
-    ampereChart.data.labels = ampereLabels;
-    ampereChart.data.datasets[0].data = ampereData;
-    ampereChart.update();
-  }
-}
-
-/* === KIRIM COMMAND ON/OFF === */
-function sendCommand(cmd){
-  if(!panelRef || !isAdmin) return;
-  panelRef.update({status: cmd});
-}
-
-/* === FORGOT PASSWORD (dengan verifikasi Nama Ibu) === */
-function forgotPassword(){
-  const email = prompt("Masukkan email Anda untuk reset password:");
-  if(!email) return;
-  const userId = email.replace(/\W/g, "_");
-  db.ref("users/" + userId).get().then(snap=>{
-    if(snap.exists()){
-      const data = snap.val();
-      const ibuInput = prompt("Masukkan nama ibu kandung Anda:");
-      if(ibuInput && ibuInput.toLowerCase() === data.ibu.toLowerCase()){
-        const newPass = prompt("Masukkan password baru:");
-        if(newPass){
-          db.ref("users/" + userId + "/password").set(newPass);
-          alert("✅ Password berhasil diubah.");
-        }
-      } else {
-        alert("❌ Nama ibu kandung tidak sesuai!");
-      }
-    } else {
-      alert("❌ Email tidak terdaftar.");
-    }
-  });
-}
-
-/* === CEK LOCALSTORAGE UNTUK LOGIN OTOMATIS === */
-window.addEventListener("load", ()=>{
-  const savedUser = localStorage.getItem("currentUser");
-  const savedToken = localStorage.getItem("currentToken");
-  const savedAdmin = localStorage.getItem("isAdmin") === "true";
-
-  if(savedUser && savedToken){
-    currentUser = savedUser;
-    currentToken = savedToken;
-    isAdmin = savedAdmin;
-    showPage("panelPage");
-    initPanel(currentToken);
-  } else showPage("loginPage");
-});
 </script>
 </body>
 </html>
