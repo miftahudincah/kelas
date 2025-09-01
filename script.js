@@ -417,4 +417,4 @@ if(isAdmin){
   });
 } else {
   window.addEventListener("load", loadExam);
-}
+                         }
