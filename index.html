@@ -9,41 +9,20 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
-  <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
-    .profile-pic { width:120px; height:120px; border-radius:50%; object-fit:cover; border:3px solid #4CAF50; display:block; margin:10px auto; }
-    #photoInput { margin-top:10px; display:block; margin-left:auto; margin-right:auto; }
-    #statusMsg { font-size:14px; color:#555; margin-top:8px; text-align:center; }
-    .user-item { display:flex; align-items:center; margin-bottom:8px; padding:5px; border-bottom:1px solid #ddd; }
-    .user-item img { width:35px; height:35px; border-radius:50%; margin-right:10px; object-fit:cover; }
-    .user-info { flex:1; }
-    .user-status { font-size:12px; }
-    .online { color:green; font-weight:bold; }
-    .offline { color:red; }
-    .card { padding:10px; margin:5px 0; border:1px solid #ccc; border-radius:5px; background:#fff; }
-    .card-grid { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
-    .btn-primary { padding:6px 12px; margin:2px; cursor:pointer; background:#2575fc; color:#fff; border:none; border-radius:4px; }
-    .btn-danger { padding:6px 12px; margin:2px; cursor:pointer; background:#fc4f4f; color:#fff; border:none; border-radius:4px; }
-    .page { display:none; padding:15px; }
-    .page.active { display:block; }
-    .dark-mode { background:#222; color:#ddd; }
-    .dark-mode .card { background:#333; border-color:#555; }
-    .dark-mode input, .dark-mode textarea { background:#444; color:#ddd; border:1px solid #666; }
-    input, textarea { width:100%; margin:5px 0; padding:5px; border-radius:4px; border:1px solid #ccc; }
-    .footer { text-align:center; margin-top:25px; font-size:14px; color:#777; }
-    .btn-group { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:15px; }
-  </style>
 </head>
 <body>
 <div class="container">
   <h2 id="controllerTitle" style="text-align:center;">⚡ Trainer SMK</h2>
 
+  <!-- Toggle Mode -->
   <div style="text-align:center; margin-bottom:15px;">
     <button class="btn-primary" onclick="toggleTheme()">🌙/☀️ Ganti Mode</button>
   </div>
@@ -78,17 +57,19 @@
     <h3 id="panelTitle">Panel Trainer SMK</h3>
     <p id="panelInfo" style="text-align:center;"></p>
 
+    <!-- Monitoring -->
     <div class="card-grid">
       <div class="card">Voltage: <span id="voltageVal">0</span> V</div>
       <div class="card">Ampere: <span id="ampereVal">0</span> A</div>
     </div>
-
     <canvas id="voltageChart"></canvas>
     <canvas id="ampereChart"></canvas>
 
+    <!-- User List -->
     <h3 id="userListTitle" style="margin-top:20px;">Pengguna Token Ini</h3>
     <div id="userList" class="card"></div>
 
+    <!-- Panel Buttons -->
     <div class="btn-group">
       <button id="btnOn" class="btn-primary">🔵 ON</button>
       <button id="btnOff" class="btn-primary">⚪ OFF</button>
@@ -126,7 +107,13 @@
     <p>Kerjakan soal berikut:</p>
     <div id="examList" class="card-grid"></div>
 
+    <!-- Data Peserta -->
+    <h3>Data Peserta</h3>
+    <input type="text" id="examNama" placeholder="Masukkan Nama">
+    <input type="email" id="examEmail" placeholder="Masukkan Email">
+
     <div style="text-align:center; margin-top:15px;">
+      <button class="btn-primary" onclick="kirimJawaban()">📩 Kirim Jawaban</button>
       <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
     </div>
   </div>
@@ -134,23 +121,11 @@
   <div class="footer">Developed by Miftahudin Wardani</div>
 </div>
 
-<!-- Script utama -->
-<script src="script.js"></script>
-<script>
-  // Tombol profil
-  document.getElementById("btnOpenProfile").addEventListener("click", () => {
-    if(currentUserId) openUserProfile(currentUserId);
-    else alert("❌ User belum login!");
-  });
-
-  // Tombol ujian
-  document.getElementById("btnExam").addEventListener("click", () => {
-    showPage("examPage");
-    loadExam();
-  });
-
-  // Default page
-  showPage("loginPage");
-</script>
+<!-- Script utama (dipisah per file) -->
+<script src="firebase.js"></script>
+<script src="auth.js"></script>
+<script src="panel.js"></script>
+<script src="profile.js"></script>
+<script src="exam.js"></script>
 </body>
 </html>
