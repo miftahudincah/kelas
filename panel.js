@@ -175,32 +175,16 @@ window.addEventListener("load", () => {
   const savedAdmin = localStorage.getItem("isAdmin") === "true";
 
   if (!savedUser || !savedToken) {
+    // Kalau tidak ada session, balik ke login
     showPage("loginPage");
     return;
   }
 
-  // Set ulang variable global
+  // Kalau ada session → set ulang variable global
   currentUser = savedUser;
   currentToken = savedToken;
   isAdmin = savedAdmin;
   currentUserId = savedUser.replace(/\W/g, "_");
-
-  // === Pantau izin user sendiri secara real-time ===
-  db.ref("users/" + currentUserId + "/allowed").on("value", snap => {
-    const allowed = snap.val();
-    if (allowed === false || allowed === null) {
-      alert("❌ Akses Anda dicabut oleh admin");
-      // Hapus session
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("currentToken");
-      localStorage.removeItem("isAdmin");
-      // Sign out dari Firebase Auth jika dipakai
-      if (firebase && firebase.auth) {
-        firebase.auth().signOut().catch(err => console.error(err));
-      }
-      showPage("loginPage"); // balik ke login
-    }
-  });
 
   // Re-init panel
   initPanel(currentToken);
