@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trainer SMK</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -19,113 +19,107 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
-  <h2 id="controllerTitle" style="text-align:center;">⚡ Trainer SMK</h2>
+  <main class="container">
+    <header>
+      <h2 id="controllerTitle">⚡ Trainer SMK</h2>
+    </header>
 
-  <!-- Toggle Mode -->
-  <div style="text-align:center; margin-bottom:15px;">
-    <button class="btn-primary" onclick="toggleTheme()">🌙/☀️ Ganti Mode</button>
-  </div>
+    <!-- Theme Switch -->
+    <section class="theme-switch">
+      <button class="btn-primary" onclick="toggleTheme()">🌙 / ☀️ Ganti Mode</button>
+    </section>
 
-  <!-- REGISTER PAGE -->
-  <div id="registerPage" class="page">
-    <h3>Daftar Akun</h3>
-    <input type="text" id="regEmail" placeholder="Email">
-    <input type="password" id="regPassword" placeholder="Password">
-    <input type="text" id="regToken" placeholder="Token Panel">
-    <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
-    <div style="text-align:center;">
-      <button class="btn-primary" onclick="registerUser()">Daftar</button>
-    </div>
-    <p style="text-align:center;">Sudah punya akun? <a onclick="showPage('loginPage')">Login</a></p>
-  </div>
+    <!-- REGISTER PAGE -->
+    <section id="registerPage" class="page">
+      <h3>Daftar Akun</h3>
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPassword" placeholder="Password">
+      <input type="text" id="regToken" placeholder="Token Panel">
+      <input type="text" id="regIbu" placeholder="Nama Ibu Kandung">
+      <div class="btn-group">
+        <button class="btn-primary" onclick="registerUser()">Daftar</button>
+      </div>
+      <p class="text-center">Sudah punya akun? 
+        <a onclick="showPage('loginPage')">Login</a>
+      </p>
+    </section>
 
-  <!-- LOGIN PAGE -->
-  <div id="loginPage" class="page">
-    <h3>Login</h3>
-    <input type="text" id="logEmail" placeholder="Email">
-    <input type="password" id="logPassword" placeholder="Password">
-    <div style="text-align:center;">
-      <button class="btn-primary" onclick="loginUser()">Login</button>
-    </div>
-    <p style="text-align:center;">Belum punya akun? <a onclick="showPage('registerPage')">Daftar</a></p>
-    <p style="text-align:center;"><a onclick="forgotPassword()">Lupa Password?</a></p>
-  </div>
+    <!-- LOGIN PAGE -->
+    <section id="loginPage" class="page">
+      <h3>Login</h3>
+      <input type="email" id="logEmail" placeholder="Email">
+      <input type="password" id="logPassword" placeholder="Password">
+      <div class="btn-group">
+        <button class="btn-primary" onclick="loginUser()">Login</button>
+      </div>
+      <p class="text-center">Belum punya akun? 
+        <a onclick="showPage('registerPage')">Daftar</a>
+      </p>
+      <p class="text-center">
+        <a onclick="forgotPassword()">Lupa Password?</a>
+      </p>
+    </section>
 
-  <!-- PANEL PAGE -->
-  <div id="panelPage" class="page">
-    <h3 id="panelTitle">Panel Trainer SMK</h3>
-    <p id="panelInfo" style="text-align:center;"></p>
+    <!-- PANEL PAGE -->
+    <section id="panelPage" class="page">
+      <h3 id="panelTitle">Panel Trainer SMK</h3>
+      <p id="panelInfo" class="text-center"></p>
 
-    <!-- Monitoring -->
-    <div class="card-grid">
-      <div class="card">Voltage: <span id="voltageVal">0</span> V</div>
-      <div class="card">Ampere: <span id="ampereVal">0</span> A</div>
-    </div>
-    <canvas id="voltageChart"></canvas>
-    <canvas id="ampereChart"></canvas>
+      <!-- Monitoring -->
+      <div class="card-grid">
+        <div class="card">Voltage: <span id="voltageVal">0</span> V</div>
+        <div class="card">Ampere: <span id="ampereVal">0</span> A</div>
+      </div>
 
-    <!-- User List -->
-    <h3 id="userListTitle" style="margin-top:20px;">Pengguna Token Ini</h3>
-    <div id="userList" class="card"></div>
+      <canvas id="voltageChart"></canvas>
+      <canvas id="ampereChart"></canvas>
 
-    <!-- Panel Buttons -->
-    <div class="btn-group">
-      <button id="btnOn" class="btn-primary">🔵 ON</button>
-      <button id="btnOff" class="btn-primary">⚪ OFF</button>
-      <button id="btnOpenProfile" class="btn-primary">👤 Profil</button>
-      <button id="btnExam" class="btn-primary">📝 Ujian</button>
-      <button class="btn-danger" onclick="logout()">Logout</button>
-    </div>
-  </div>
+      <!-- User List -->
+      <h3 id="userListTitle">Pengguna Token Ini</h3>
+      <div id="userList" class="card"></div>
 
-  <!-- PROFILE PAGE -->
-  <div id="profilePage" class="page">
-    <h3>Profil Saya</h3>
-    <img id="photoPreview" class="profile-pic" src="https://via.placeholder.com/120" alt="Foto Profil">
-    <input type="file" id="photoInput" accept="image/*">
-    <button id="btnSavePhoto" class="btn-primary" onclick="savePhoto()">Simpan Foto</button>
-    <p id="statusMsg"></p>
+      <!-- Panel Buttons -->
+      <div class="btn-group">
+        <button id="btnOn" class="btn-primary">🔵 ON</button>
+        <button id="btnOff" class="btn-primary">⚪ OFF</button>
+        <button id="btnOpenProfile" class="btn-primary">👤 Profil</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
 
-    <div class="card">
-      <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
-      <p><strong>Token Panel:</strong> <span id="profileToken">-</span></p>
-      <p><strong>Nama Ibu Kandung:</strong> <span id="profileIbu">-</span></p>
-      <p><strong>Status:</strong> <span id="profileStatus">Offline</span></p>
-      <p><strong>Terakhir Online:</strong> <span id="profileLastLogin">-</span></p>
-      <p><strong>Role:</strong> <span id="profileRole">-</span></p>
-    </div>
+    <!-- PROFILE PAGE -->
+    <section id="profilePage" class="page">
+      <h3>Profil Saya</h3>
+      <div class="profile-section">
+        <img id="photoPreview" class="profile-pic" src="https://via.placeholder.com/120" alt="Foto Profil">
+        <input type="file" id="photoInput" accept="image/*">
+        <button id="btnSavePhoto" class="btn-primary" onclick="savePhoto()">Simpan Foto</button>
+      </div>
+      <p id="statusMsg" class="text-center"></p>
 
-    <div style="text-align:center; margin-top:15px;">
-      <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
-    </div>
-  </div>
+      <div class="card">
+        <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
+        <p><strong>Token Panel:</strong> <span id="profileToken">-</span></p>
+        <p><strong>Nama Ibu Kandung:</strong> <span id="profileIbu">-</span></p>
+        <p><strong>Status:</strong> <span id="profileStatus">Offline</span></p>
+        <p><strong>Terakhir Online:</strong> <span id="profileLastLogin">-</span></p>
+        <p><strong>Role:</strong> <span id="profileRole">-</span></p>
+      </div>
 
-  <!-- EXAM PAGE -->
-  <div id="examPage" class="page">
-    <h3>Ujian Online</h3>
-    <p>Kerjakan soal berikut:</p>
-    <div id="examList" class="card-grid"></div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
+      </div>
+    </section>
 
-    <!-- Data Peserta -->
-    <h3>Data Peserta</h3>
-    <input type="text" id="examNama" placeholder="Masukkan Nama">
-    <input type="email" id="examEmail" placeholder="Masukkan Email">
+    <footer class="footer">
+      Developed by <strong>Miftahudin Wardani</strong>
+    </footer>
+  </main>
 
-    <div style="text-align:center; margin-top:15px;">
-      <button class="btn-primary" onclick="kirimJawaban()">📩 Kirim Jawaban</button>
-      <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
-    </div>
-  </div>
-
-  <div class="footer">Developed by Miftahudin Wardani</div>
-</div>
-
-<!-- Script utama (dipisah per file) -->
-<script src="firebase.js"></script>
-<script src="auth.js"></script>
-<script src="panel.js"></script>
-<script src="profile.js"></script>
-<script src="exam.js"></script>
+  <!-- Script utama -->
+  <script src="firebase.js"></script>
+  <script src="auth.js"></script>
+  <script src="panel.js"></script>
+  <script src="profile.js"></script>
 </body>
 </html>
