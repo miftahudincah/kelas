@@ -5,6 +5,7 @@ function initPanel(token) {
     return;
   }
 
+  // Ambil data panel sesuai token
   panelRef = db.ref("panel/" + token);
 
   // Tampilkan tombol ON/OFF hanya jika admin
@@ -13,10 +14,13 @@ function initPanel(token) {
   if (btnOn) btnOn.style.display = isAdmin ? "inline-block" : "none";
   if (btnOff) btnOff.style.display = isAdmin ? "inline-block" : "none";
 
-  // Monitor data panel
+  // === MONITOR PANEL DATA ===
   panelRef.on("value", snap => {
     const data = snap.val();
-    if (!data) return;
+    if (!data) {
+      console.warn("⚠️ Panel kosong untuk token:", token);
+      return;
+    }
 
     document.getElementById("voltageVal").innerText = data.voltage || 0;
     document.getElementById("ampereVal").innerText = data.ampere || 0;
@@ -41,63 +45,68 @@ function initPanel(token) {
     updateCharts();
   });
 
-  // Daftar user dengan token yang sama
+  // === MONITOR USER LIST BERDASARKAN TOKEN ===
   const userListDiv = document.getElementById("userList");
-  db.ref("users").orderByChild("token").equalTo(token).on("value", snap => {
-    if (!userListDiv) return;
-    userListDiv.innerHTML = "";
-    const users = snap.val();
-    if (!users) return;
-
-    Object.keys(users).forEach(uid => {
-      const u = users[uid];
-      const card = document.createElement("div");
-      card.className = "card user-item";
-      card.setAttribute("data-userid", uid);
-
-      card.innerHTML = `
-        <img src="${u.photoURL || "https://via.placeholder.com/40"}" 
-             style="width:40px;height:40px;border-radius:50%">
-        <span>${u.email || "Tanpa Email"}${u.isAdmin ? " (guru)" : ""}</span>
-        <span style="margin-left:auto;color:${u.online ? "green" : "red"}">
-          ${u.online ? "●" : "○"}
-        </span>
-        <small>
-          ${
-            u.online
-              ? "Online"
-              : u.lastSeen
-              ? "Terakhir: " +
-                new Date(u.lastSeen).toLocaleString("id-ID")
-              : "-"
-          }
-        </small>
-        <br>
-        <small>Izin: ${u.allowed ? "✅ Diizinkan" : "❌ Belum"}</small>
-      `;
-
-      // Kalau admin → bisa izinkan / cabut izin user lain
-      if (isAdmin && !u.isAdmin) {
-        const btn = document.createElement("button");
-        btn.className = "btn-primary";
-        btn.innerText = u.allowed ? "Cabut Izin" : "Izinkan";
-        btn.style.marginTop = "5px";
-        btn.onclick = (e) => {
-          e.stopPropagation(); // biar ga ikut buka profil
-          db.ref("users/" + uid).update({ allowed: !u.allowed })
-            .then(() => alert("✅ Status izin diperbarui!"));
-        };
-        card.appendChild(btn);
+  db.ref("users")
+    .orderByChild("token")
+    .equalTo(token)
+    .on("value", snap => {
+      if (!userListDiv) return;
+      userListDiv.innerHTML = "";
+      const users = snap.val();
+      if (!users) {
+        userListDiv.innerHTML = "<p>❌ Belum ada user untuk token ini</p>";
+        return;
       }
 
-      // Klik user → buka profil
-      card.addEventListener("click", () => {
-        openUserProfile(uid);
-      });
+      Object.keys(users).forEach(uid => {
+        const u = users[uid];
+        const card = document.createElement("div");
+        card.className = "card user-item";
+        card.setAttribute("data-userid", uid);
 
-      userListDiv.appendChild(card);
+        card.innerHTML = `
+          <img src="${u.photoURL || "https://via.placeholder.com/40"}" 
+               style="width:40px;height:40px;border-radius:50%">
+          <span>${u.email || "Tanpa Email"}${u.isAdmin ? " (guru)" : ""}</span>
+          <span style="margin-left:auto;color:${u.online ? "green" : "red"}">
+            ${u.online ? "●" : "○"}
+          </span>
+          <small>
+            ${
+              u.online
+                ? "Online"
+                : u.lastSeen
+                ? "Terakhir: " + new Date(u.lastSeen).toLocaleString("id-ID")
+                : "-"
+            }
+          </small>
+          <br>
+          <small>Izin: ${u.allowed ? "✅ Diizinkan" : "❌ Belum"}</small>
+        `;
+
+        // Kalau admin → bisa izinkan / cabut izin user lain
+        if (isAdmin && !u.isAdmin) {
+          const btn = document.createElement("button");
+          btn.className = "btn-primary";
+          btn.innerText = u.allowed ? "Cabut Izin" : "Izinkan";
+          btn.style.marginTop = "5px";
+          btn.onclick = (e) => {
+            e.stopPropagation(); // biar ga ikut buka profil
+            db.ref("users/" + uid).update({ allowed: !u.allowed })
+              .then(() => alert("✅ Status izin diperbarui!"));
+          };
+          card.appendChild(btn);
+        }
+
+        // Klik user → buka profil
+        card.addEventListener("click", () => {
+          openUserProfile(uid);
+        });
+
+        userListDiv.appendChild(card);
+      });
     });
-  });
 }
 
 /* === CHART UPDATE === */
@@ -175,8 +184,7 @@ window.addEventListener("load", () => {
   const savedAdmin = localStorage.getItem("isAdmin") === "true";
 
   if (!savedUser || !savedToken) {
-    // Kalau tidak ada session, balik ke login
-    showPage("loginPage");
+    showPage("loginPage"); // balik ke login
     return;
   }
 
