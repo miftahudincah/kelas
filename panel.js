@@ -5,7 +5,6 @@ function initPanel(token) {
     return;
   }
 
-  // Ambil data panel sesuai token
   panelRef = db.ref("panel/" + token);
 
   // Tampilkan tombol ON/OFF hanya jika admin
@@ -14,18 +13,14 @@ function initPanel(token) {
   if (btnOn) btnOn.style.display = isAdmin ? "inline-block" : "none";
   if (btnOff) btnOff.style.display = isAdmin ? "inline-block" : "none";
 
-  // === MONITOR PANEL DATA ===
+  // Monitor data panel
   panelRef.on("value", snap => {
     const data = snap.val();
-    if (!data) {
-      console.warn("⚠️ Panel kosong untuk token:", token);
-      return;
-    }
+    if (!data) return;
 
     document.getElementById("voltageVal").innerText = data.voltage || 0;
     document.getElementById("ampereVal").innerText = data.ampere || 0;
-    document.getElementById("panelInfo").innerText =
-      "Status: " + (data.status || "OFF");
+    document.getElementById("panelInfo").innerText = "Status: " + (data.status || "OFF");
 
     const now = new Date().toLocaleTimeString();
     voltageData.push(data.voltage || 0);
@@ -45,68 +40,139 @@ function initPanel(token) {
     updateCharts();
   });
 
-  // === MONITOR USER LIST BERDASARKAN TOKEN ===
+  // Daftar user dengan token yang sama
   const userListDiv = document.getElementById("userList");
-  db.ref("users")
-    .orderByChild("token")
-    .equalTo(token)
-    .on("value", snap => {
-      if (!userListDiv) return;
-      userListDiv.innerHTML = "";
-      const users = snap.val();
-      if (!users) {
-        userListDiv.innerHTML = "<p>❌ Belum ada user untuk token ini</p>";
-        return;
+  db.ref("users").orderByChild("token").equalTo(token).on("value", snap => {
+    if (!userListDiv) return;
+    userListDiv.innerHTML = "";
+    const users = snap.val();
+    if (!users) return;
+
+    Object.keys(users).forEach(uid => {
+      const u = users[uid];
+      const card = document.createElement("div");
+      card.className = "card user-item";
+      card.setAttribute("data-userid", uid);
+
+      card.innerHTML = `
+        <img src="${u.photoURL || "https://via.placeholder.com/40"}" 
+             style="width:40px;height:40px;border-radius:50%">
+        <span>${u.email || "Tanpa Email"}${u.isAdmin ? " (guru)" : ""}</span>
+        <span style="margin-left:auto;color:${u.online ? "green" : "red"}">
+          ${u.online ? "●" : "○"}
+        </span>
+        <small>
+          ${
+            u.online
+              ? "Online"
+              : u.lastSeen
+              ? "Terakhir: " + new Date(u.lastSeen).toLocaleString("id-ID")
+              : "-"
+          }
+        </small>
+        <br>
+        <small>Izin: ${u.allowed ? "✅ Diizinkan" : "❌ Belum"}</small>
+      `;
+
+      if (isAdmin && !u.isAdmin) {
+        const btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.innerText = u.allowed ? "Cabut Izin" : "Izinkan";
+        btn.style.marginTop = "5px";
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          db.ref("users/" + uid).update({ allowed: !u.allowed })
+            .then(() => alert("✅ Status izin diperbarui!"));
+        };
+        card.appendChild(btn);
       }
 
-      Object.keys(users).forEach(uid => {
-        const u = users[uid];
-        const card = document.createElement("div");
-        card.className = "card user-item";
-        card.setAttribute("data-userid", uid);
-
-        card.innerHTML = `
-          <img src="${u.photoURL || "https://via.placeholder.com/40"}" 
-               style="width:40px;height:40px;border-radius:50%">
-          <span>${u.email || "Tanpa Email"}${u.isAdmin ? " (guru)" : ""}</span>
-          <span style="margin-left:auto;color:${u.online ? "green" : "red"}">
-            ${u.online ? "●" : "○"}
-          </span>
-          <small>
-            ${
-              u.online
-                ? "Online"
-                : u.lastSeen
-                ? "Terakhir: " + new Date(u.lastSeen).toLocaleString("id-ID")
-                : "-"
-            }
-          </small>
-          <br>
-          <small>Izin: ${u.allowed ? "✅ Diizinkan" : "❌ Belum"}</small>
-        `;
-
-        // Kalau admin → bisa izinkan / cabut izin user lain
-        if (isAdmin && !u.isAdmin) {
-          const btn = document.createElement("button");
-          btn.className = "btn-primary";
-          btn.innerText = u.allowed ? "Cabut Izin" : "Izinkan";
-          btn.style.marginTop = "5px";
-          btn.onclick = (e) => {
-            e.stopPropagation(); // biar ga ikut buka profil
-            db.ref("users/" + uid).update({ allowed: !u.allowed })
-              .then(() => alert("✅ Status izin diperbarui!"));
-          };
-          card.appendChild(btn);
-        }
-
-        // Klik user → buka profil
-        card.addEventListener("click", () => {
-          openUserProfile(uid);
-        });
-
-        userListDiv.appendChild(card);
+      card.addEventListener("click", () => {
+        openUserProfile(uid);
       });
+
+      userListDiv.appendChild(card);
     });
+  });
+
+  // Init chat per token
+  initChat(token, currentUser, isAdmin ? "admin" : "user");
+}
+
+/* === CHAT PANEL === */
+let chatRef;
+let currentUserEmail = "";
+let currentUserRole = "user";
+
+function initChat(token, userEmail, userRole="user") {
+  if (!token) return;
+
+  currentUserEmail = userEmail;
+  currentUserRole = userRole;
+
+  // Hapus listener lama supaya chat tidak do-bel
+  if (chatRef) chatRef.off();
+  
+  chatRef = db.ref("chats/" + token);
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = ""; // bersihkan chat sebelumnya
+
+  chatRef.on("child_added", snap => {
+    const msg = snap.val();
+    if (!msg) return;
+
+    // Pastikan pesan belum ada di DOM
+    if (document.getElementById("msg-" + snap.key)) return;
+
+    const div = document.createElement("div");
+    div.className = "chat-msg";
+    div.id = "msg-" + snap.key;
+
+    let deleteBtn = "";
+    if (msg.sender === currentUserEmail || currentUserRole === "admin") {
+      deleteBtn = `<span class="btn-delete" onclick="deleteMessage('${snap.key}')">[hapus]</span>`;
+    }
+
+    div.innerHTML = `
+      <strong>${msg.sender}</strong>: 
+      <span>${msg.text}</span> ${deleteBtn}
+      <br>
+      <small style="color:gray">${new Date(msg.timestamp).toLocaleString("id-ID")}</small>
+    `;
+
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+
+  document.getElementById("chatAdminTools").style.display = currentUserRole === "admin" ? "block" : "none";
+  document.getElementById("btnSend").onclick = sendMessage;
+}
+
+function sendMessage() {
+  const input = document.getElementById("chatMessage");
+  const text = input.value.trim();
+  if (!text || !chatRef) return;
+
+  chatRef.push({
+    sender: currentUserEmail,
+    text: text,
+    timestamp: Date.now()
+  }).then(() => input.value = "");
+}
+
+function deleteMessage(msgId) {
+  if (!chatRef) return;
+  chatRef.child(msgId).remove().then(() => {
+    const msgDiv = document.getElementById("msg-" + msgId);
+    if (msgDiv) msgDiv.remove();
+  });
+}
+
+function deleteAllMessages() {
+  if (!chatRef) return;
+  if (confirm("Yakin hapus semua chat?")) {
+    chatRef.remove().then(() => document.getElementById("chatBox").innerHTML = "");
+  }
 }
 
 /* === CHART UPDATE === */
@@ -115,18 +181,7 @@ function updateCharts() {
     const ctxV = document.getElementById("voltageChart").getContext("2d");
     voltageChart = new Chart(ctxV, {
       type: "line",
-      data: {
-        labels: voltageLabels,
-        datasets: [
-          {
-            label: "Voltage (V)",
-            data: voltageData,
-            borderColor: "#2575fc",
-            fill: false,
-            tension: 0.3,
-          },
-        ],
-      },
+      data: { labels: voltageLabels, datasets: [{ label: "Voltage (V)", data: voltageData, borderColor: "#2575fc", fill: false, tension: 0.3 }] },
       options: { scales: { y: { beginAtZero: true } } },
     });
   } else {
@@ -139,18 +194,7 @@ function updateCharts() {
     const ctxA = document.getElementById("ampereChart").getContext("2d");
     ampereChart = new Chart(ctxA, {
       type: "line",
-      data: {
-        labels: ampereLabels,
-        datasets: [
-          {
-            label: "Ampere (A)",
-            data: ampereData,
-            borderColor: "#6a11cb",
-            fill: false,
-            tension: 0.3,
-          },
-        ],
-      },
+      data: { labels: ampereLabels, datasets: [{ label: "Ampere (A)", data: ampereData, borderColor: "#6a11cb", fill: false, tension: 0.3 }] },
       options: { scales: { y: { beginAtZero: true } } },
     });
   } else {
@@ -178,26 +222,22 @@ function applySavedTheme() {
 
 /* === EVENT LISTENER === */
 window.addEventListener("load", () => {
-  // Pastikan user masih login (cek localStorage)
   const savedUser = localStorage.getItem("currentUser");
   const savedToken = localStorage.getItem("currentToken");
   const savedAdmin = localStorage.getItem("isAdmin") === "true";
 
   if (!savedUser || !savedToken) {
-    showPage("loginPage"); // balik ke login
+    showPage("loginPage");
     return;
   }
 
-  // Kalau ada session → set ulang variable global
   currentUser = savedUser;
   currentToken = savedToken;
   isAdmin = savedAdmin;
   currentUserId = savedUser.replace(/\W/g, "_");
 
-  // Re-init panel
   initPanel(currentToken);
 
-  // Tombol ON / OFF
   document.getElementById("btnOn")?.addEventListener("click", () => {
     if (isAdmin && panelRef) panelRef.update({ status: "ON" });
   });
@@ -206,7 +246,6 @@ window.addEventListener("load", () => {
     if (isAdmin && panelRef) panelRef.update({ status: "OFF" });
   });
 
-  // === DARK MODE ===
   applySavedTheme();
   document.getElementById("darkModeBtn")?.addEventListener("click", toggleDarkMode);
 });
