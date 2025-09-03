@@ -17,6 +17,11 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css">
+  <style>
+    .chat-msg { padding:6px; border-bottom:1px solid #eee; }
+    .btn-delete { color:red; cursor:pointer; font-size:12px; margin-left:6px; }
+    .btn-danger { background:red; color:#fff; padding:4px 8px; border:none; border-radius:6px; cursor:pointer; }
+  </style>
 </head>
 <body>
   <main class="container">
@@ -26,7 +31,7 @@
 
     <!-- Theme Switch -->
     <section class="theme-switch">
-      <button class="btn-primary" onclick="toggleTheme()">🌙 / ☀️ Ganti Mode</button>
+      <button class="btn-primary" onclick="toggleDarkMode()">🌙 / ☀️ Ganti Mode</button>
     </section>
 
     <!-- REGISTER PAGE -->
@@ -78,6 +83,17 @@
       <h3 id="userListTitle">Pengguna Token Ini</h3>
       <div id="userList" class="card"></div>
 
+      <!-- Chat Panel -->
+      <h3>💬 Chat Panel</h3>
+      <div id="chatBox" class="chat-box"></div>
+      <div class="chat-input">
+        <input type="text" id="chatMessage" placeholder="Tulis pesan...">
+        <button class="btn-primary" id="btnSend">Kirim</button>
+      </div>
+      <div class="btn-group" id="chatAdminTools" style="display:none; margin-top:8px;">
+        <button class="btn-danger" onclick="deleteAllMessages()">🗑️ Hapus Semua Chat</button>
+      </div>
+
       <!-- Panel Buttons -->
       <div class="btn-group">
         <button id="btnOn" class="btn-primary">🔵 ON</button>
@@ -121,5 +137,117 @@
   <script src="auth.js"></script>
   <script src="panel.js"></script>
   <script src="profile.js"></script>
+
+  <!-- Chat Script -->
+  <script>
+    let chatRef;
+    let currentUserEmail = "";
+    let currentUserRole = "user";
+
+    function initChat(token, userEmail, userRole = "user") {
+      if (!token) return;
+      currentUserEmail = userEmail;
+      currentUserRole = userRole;
+
+      chatRef = db.ref("chats/" + token);
+
+      // tampilkan pesan lama + baru
+      chatRef.on("child_added", snap => {
+        const msg = snap.val();
+        if (!msg) return;
+
+        // filter: user biasa hanya lihat chat miliknya
+        if (currentUserRole !== "admin" && msg.sender !== currentUserEmail) {
+          return;
+        }
+
+        const chatBox = document.getElementById("chatBox");
+        const div = document.createElement("div");
+        div.className = "chat-msg";
+        div.id = "msg-" + snap.key;
+
+        let deleteBtn = "";
+        // user bisa hapus pesan sendiri, admin bisa hapus semua
+        if (msg.sender === currentUserEmail || currentUserRole === "admin") {
+          deleteBtn = `<span class="btn-delete" onclick="deleteMessage('${snap.key}')">[hapus]</span>`;
+        }
+
+        div.innerHTML = `
+          <strong>${msg.sender}</strong>: 
+          <span>${msg.text}</span> ${deleteBtn}
+          <br>
+          <small style="color:gray">${new Date(msg.timestamp).toLocaleString("id-ID")}</small>
+        `;
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      // tampilkan tombol hapus semua hanya untuk admin
+      if (currentUserRole === "admin") {
+        document.getElementById("chatAdminTools").style.display = "block";
+      }
+
+      // tombol kirim
+      document.getElementById("btnSend").onclick = sendMessage;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("chatMessage");
+      const text = input.value.trim();
+      if (!text || !chatRef) return;
+
+      chatRef.push({
+        sender: currentUserEmail,
+        text: text,
+        timestamp: Date.now()
+      }).then(() => {
+        input.value = "";
+      });
+    }
+
+    function deleteMessage(msgId) {
+      if (!chatRef) return;
+      chatRef.child(msgId).once("value").then(snap => {
+        const msg = snap.val();
+        if (!msg) return;
+
+        // validasi hapus: admin bisa hapus semua, user hanya miliknya
+        if (currentUserRole === "admin" || msg.sender === currentUserEmail) {
+          if (confirm("Hapus pesan ini?")) {
+            chatRef.child(msgId).remove().then(() => {
+              const msgDiv = document.getElementById("msg-" + msgId);
+              if (msgDiv) msgDiv.remove();
+            });
+          }
+        } else {
+          alert("❌ Anda tidak bisa menghapus pesan ini.");
+        }
+      });
+    }
+
+    function deleteAllMessages() {
+      if (!chatRef) return;
+      if (currentUserRole !== "admin") {
+        alert("❌ Hanya admin yang bisa menghapus semua chat.");
+        return;
+      }
+      if (confirm("Yakin hapus semua chat?")) {
+        chatRef.remove().then(() => {
+          document.getElementById("chatBox").innerHTML = "";
+        });
+      }
+    }
+
+    // auto init ketika masuk panel
+    window.addEventListener("load", () => {
+      const savedToken = localStorage.getItem("currentToken");
+      const savedUser = localStorage.getItem("currentUser");
+      const savedRole = localStorage.getItem("currentRole") || "user";
+      if (savedToken && savedUser) {
+        initChat(savedToken, savedUser, savedRole);
+      }
+    });
+  </script>
 </body>
 </html>
