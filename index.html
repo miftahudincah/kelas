@@ -21,6 +21,7 @@
     .chat-msg { padding:6px; border-bottom:1px solid #eee; }
     .btn-delete { color:red; cursor:pointer; font-size:12px; margin-left:6px; }
     .btn-danger { background:red; color:#fff; padding:4px 8px; border:none; border-radius:6px; cursor:pointer; }
+    .chat-box { max-height:300px; overflow-y:auto; border:1px solid #ddd; margin-bottom:10px; padding:6px; }
   </style>
 </head>
 <body>
@@ -79,11 +80,19 @@
       <canvas id="voltageChart"></canvas>
       <canvas id="ampereChart"></canvas>
 
-      <!-- User List -->
-      <h3 id="userListTitle">Pengguna Token Ini</h3>
-      <div id="userList" class="card"></div>
+      <!-- Tombol navigasi -->
+      <div class="btn-group">
+        <button id="btnOn" class="btn-primary">🔵 ON</button>
+        <button id="btnOff" class="btn-primary">⚪ OFF</button>
+        <button class="btn-primary" onclick="showPage('chatPage')">💬 Buka Chat</button>
+        <button class="btn-primary" onclick="showPage('userPage')">👥 Lihat Pengguna</button>
+        <button id="btnOpenProfile" class="btn-primary">👤 Profil</button>
+        <button class="btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
 
-      <!-- Chat Panel -->
+    <!-- CHAT PAGE -->
+    <section id="chatPage" class="page">
       <h3>💬 Chat Panel</h3>
       <div id="chatBox" class="chat-box"></div>
       <div class="chat-input">
@@ -94,12 +103,18 @@
         <button class="btn-danger" onclick="deleteAllMessages()">🗑️ Hapus Semua Chat</button>
       </div>
 
-      <!-- Panel Buttons -->
       <div class="btn-group">
-        <button id="btnOn" class="btn-primary">🔵 ON</button>
-        <button id="btnOff" class="btn-primary">⚪ OFF</button>
-        <button id="btnOpenProfile" class="btn-primary">👤 Profil</button>
+        <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
         <button class="btn-danger" onclick="logout()">Logout</button>
+      </div>
+    </section>
+
+    <!-- USER PAGE -->
+    <section id="userPage" class="page">
+      <h3>👥 Pengguna Token Ini</h3>
+      <div id="userList" class="card"></div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="showPage('panelPage')">⬅️ Kembali ke Panel</button>
       </div>
     </section>
 
@@ -138,28 +153,26 @@
   <script src="panel.js"></script>
   <script src="profile.js"></script>
 
-  <!-- Chat Script -->
+  <!-- Chat & User Script -->
   <script>
     let chatRef;
     let currentUserEmail = "";
     let currentUserRole = "user";
+    let currentToken = "";
 
-    function initChat(token, userEmail, userRole = "user") {
+    function initChat(token, userEmail, userRole="user") {
       if (!token) return;
+      currentToken = token;
       currentUserEmail = userEmail;
       currentUserRole = userRole;
 
       chatRef = db.ref("chats/" + token);
 
-      // tampilkan pesan lama + baru
+      document.getElementById("chatBox").innerHTML = "";
+
       chatRef.on("child_added", snap => {
         const msg = snap.val();
         if (!msg) return;
-
-        // filter: user biasa hanya lihat chat miliknya
-        if (currentUserRole !== "admin" && msg.sender !== currentUserEmail) {
-          return;
-        }
 
         const chatBox = document.getElementById("chatBox");
         const div = document.createElement("div");
@@ -167,7 +180,6 @@
         div.id = "msg-" + snap.key;
 
         let deleteBtn = "";
-        // user bisa hapus pesan sendiri, admin bisa hapus semua
         if (msg.sender === currentUserEmail || currentUserRole === "admin") {
           deleteBtn = `<span class="btn-delete" onclick="deleteMessage('${snap.key}')">[hapus]</span>`;
         }
@@ -183,12 +195,12 @@
         chatBox.scrollTop = chatBox.scrollHeight;
       });
 
-      // tampilkan tombol hapus semua hanya untuk admin
       if (currentUserRole === "admin") {
         document.getElementById("chatAdminTools").style.display = "block";
+      } else {
+        document.getElementById("chatAdminTools").style.display = "none";
       }
 
-      // tombol kirim
       document.getElementById("btnSend").onclick = sendMessage;
     }
 
@@ -208,30 +220,14 @@
 
     function deleteMessage(msgId) {
       if (!chatRef) return;
-      chatRef.child(msgId).once("value").then(snap => {
-        const msg = snap.val();
-        if (!msg) return;
-
-        // validasi hapus: admin bisa hapus semua, user hanya miliknya
-        if (currentUserRole === "admin" || msg.sender === currentUserEmail) {
-          if (confirm("Hapus pesan ini?")) {
-            chatRef.child(msgId).remove().then(() => {
-              const msgDiv = document.getElementById("msg-" + msgId);
-              if (msgDiv) msgDiv.remove();
-            });
-          }
-        } else {
-          alert("❌ Anda tidak bisa menghapus pesan ini.");
-        }
+      chatRef.child(msgId).remove().then(() => {
+        const msgDiv = document.getElementById("msg-" + msgId);
+        if (msgDiv) msgDiv.remove();
       });
     }
 
     function deleteAllMessages() {
       if (!chatRef) return;
-      if (currentUserRole !== "admin") {
-        alert("❌ Hanya admin yang bisa menghapus semua chat.");
-        return;
-      }
       if (confirm("Yakin hapus semua chat?")) {
         chatRef.remove().then(() => {
           document.getElementById("chatBox").innerHTML = "";
@@ -239,14 +235,45 @@
       }
     }
 
-    // auto init ketika masuk panel
-    window.addEventListener("load", () => {
+    function loadUserList(token) {
+      if (!token) return;
+      const userListDiv = document.getElementById("userList");
+      userListDiv.innerHTML = "Memuat...";
+      db.ref("users").orderByChild("token").equalTo(token).on("value", snap => {
+        userListDiv.innerHTML = "";
+        snap.forEach(child => {
+          const user = child.val();
+          const div = document.createElement("div");
+          div.className = "chat-msg";
+          div.innerHTML = `
+            <strong>${user.email}</strong> (${user.role || "user"})<br>
+            Status: ${user.status || "Offline"}<br>
+            Terakhir Online: ${user.lastLogin || "-"}
+          `;
+          userListDiv.appendChild(div);
+        });
+      });
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+      document.getElementById(pageId).style.display = "block";
+
       const savedToken = localStorage.getItem("currentToken");
       const savedUser = localStorage.getItem("currentUser");
       const savedRole = localStorage.getItem("currentRole") || "user";
-      if (savedToken && savedUser) {
+
+      if (pageId === "chatPage" && savedToken && savedUser) {
         initChat(savedToken, savedUser, savedRole);
       }
+
+      if (pageId === "userPage" && savedToken) {
+        loadUserList(savedToken);
+      }
+    }
+
+    window.addEventListener("load", () => {
+      showPage("loginPage");
     });
   </script>
 </body>
