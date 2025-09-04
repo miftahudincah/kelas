@@ -6,7 +6,7 @@ function initPanel(token) {
     return;
   }
 
-  // Validasi token user
+  // Validasi user + token
   db.ref("users").orderByChild("email").equalTo(currentUser).once("value", snap => {
     const users = snap.val();
     if (!users) {
@@ -19,8 +19,11 @@ function initPanel(token) {
     let valid = false;
     Object.keys(users).forEach(uid => {
       const u = users[uid];
-      if (u.token === token) {
+
+      // cek email & token cocok
+      if (u.email === currentUser && u.token === token) {
         valid = true;
+        isAdmin = u.isAdmin || false;
 
         // cek izin
         if (!u.allowed && !u.isAdmin) {
@@ -33,22 +36,25 @@ function initPanel(token) {
     });
 
     if (!valid) {
-      alert("❌ Token tidak cocok, akses ditolak!");
+      alert("❌ Token tidak cocok dengan akun Anda!");
       localStorage.clear();
       showPage("loginPage");
       return;
     }
 
-    // --- Jika valid, lanjutkan inisialisasi ---
+    // --- Jika valid, tampilkan halaman panel ---
+    showPage("panelPage");
+
+    // referensi panel sesuai token
     panelRef = db.ref("panel/" + token);
 
-    // tombol ON/OFF hanya untuk admin
+    // tombol ON/OFF hanya admin
     const btnOn = document.getElementById("btnOn");
     const btnOff = document.getElementById("btnOff");
     if (btnOn) btnOn.style.display = isAdmin ? "inline-block" : "none";
     if (btnOff) btnOff.style.display = isAdmin ? "inline-block" : "none";
 
-    // Monitor data panel
+    // monitor data panel khusus token ini
     panelRef.on("value", snap => {
       const data = snap.val();
       if (!data) return;
@@ -76,10 +82,10 @@ function initPanel(token) {
       updateCharts();
     });
 
-    // daftar user sesuai token
+    // daftar user hanya untuk token ini
     loadUserList(token);
 
-    // init chat
+    // init chat sesuai token
     initChat(token, currentUser, isAdmin ? "admin" : "user");
   });
 }
@@ -119,7 +125,7 @@ function loadUserList(token) {
         <small>Izin: ${u.allowed ? "✅ Diizinkan" : "❌ Belum"}</small>
       `;
 
-      // Tombol izin khusus admin
+      // tombol izin khusus admin
       if (isAdmin && !u.isAdmin) {
         const btn = document.createElement("button");
         btn.className = "btn-primary";
@@ -154,7 +160,7 @@ function initChat(token, userEmail, userRole = "user") {
   currentUserEmail = userEmail;
   currentUserRole = userRole;
 
-  // hapus listener lama agar tidak dobel
+  // hapus listener lama
   if (chatRef) chatRef.off();
 
   chatRef = db.ref("chats/" + token);
