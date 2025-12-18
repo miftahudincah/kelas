@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>ECU EMU Wiring Diagram - ESP32</title>
+
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -10,7 +11,7 @@ body {
   color: #e5e7eb;
   margin: 20px;
 }
-h1, h2 {
+h1, h2, h3 {
   color: #38bdf8;
 }
 table {
@@ -37,14 +38,14 @@ th {
 .pin {
   color: #22c55e;
 }
-.note {
-  color: #facc15;
-}
 .badge {
   background: #2563eb;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;
+}
+.note {
+  color: #facc15;
 }
 </style>
 </head>
@@ -52,43 +53,43 @@ th {
 <body>
 
 <h1>🔧 ECU EMU Wiring Diagram</h1>
-<p>ESP32 + MCP2515 + 2x PCF8574 + 2x ADS1115 + L298N</p>
+<p>ESP32 + MCP2515 + 2× PCF8574 + 2× ADS1115 + L298N</p>
 
-<!-- ESP32 -->
+<!-- ================= ESP32 ================= -->
 <div class="section">
 <h2>1️⃣ ESP32 Core Pins</h2>
 <table>
 <tr><th>Fungsi</th><th>GPIO ESP32</th><th>Keterangan</th></tr>
-<tr><td>CAN CS</td><td class="pin">GPIO5</td><td>MCP2515 CS</td></tr>
-<tr><td>CAN INT</td><td class="pin">GPIO4</td><td>MCP2515 Interrupt</td></tr>
-<tr><td>I2C SDA</td><td class="pin">GPIO21</td><td>ADS1115 + PCF8574</td></tr>
-<tr><td>I2C SCL</td><td class="pin">GPIO22</td><td>ADS1115 + PCF8574</td></tr>
-<tr><td>CKP IN (N1+)</td><td class="pin">GPIO27</td><td>Input pulsa CKP (REAL)</td></tr>
-<tr><td>CKP GEN OUT</td><td class="pin">GPIO16</td><td>Output 33-3 (loop ke N1+)</td></tr>
-<tr><td>CMP IN</td><td class="pin">GPIO34</td><td>Input pulsa CMP</td></tr>
-<tr><td>VVTI Sense</td><td class="pin">GPIO25</td><td>ON = VVTI terpasang</td></tr>
-<tr><td>VVTI PWM</td><td class="pin">GPIO33</td><td>PWM solenoid VVTI</td></tr>
-<tr><td>REV OUT</td><td class="pin">GPIO14</td><td>RPM output ke tachometer</td></tr>
-<tr><td>L298 ENA</td><td class="pin">GPIO32</td><td>PWM motor driver</td></tr>
+<tr><td>CAN CS</td><td class="pin">GPIO 5</td><td>MCP2515 CS</td></tr>
+<tr><td>CAN INT</td><td class="pin">GPIO 4</td><td>MCP2515 Interrupt</td></tr>
+<tr><td>I2C SDA</td><td class="pin">GPIO 21</td><td>ADS1115 + PCF8574</td></tr>
+<tr><td>I2C SCL</td><td class="pin">GPIO 22</td><td>ADS1115 + PCF8574</td></tr>
+<tr><td>CKP IN (N1+)</td><td class="pin">GPIO 27</td><td>Input pulsa CKP (REAL)</td></tr>
+<tr><td>CKP GEN OUT</td><td class="pin">GPIO 16</td><td>Output CKP 33-3 (loop test)</td></tr>
+<tr><td>CMP IN</td><td class="pin">GPIO 34</td><td>Input pulsa CMP</td></tr>
+<tr><td>VVT Sense</td><td class="pin">GPIO 25</td><td>ON = VVT terpasang</td></tr>
+<tr><td>VVT PWM</td><td class="pin">GPIO 33</td><td>PWM solenoid VVT</td></tr>
+<tr><td>REV OUT</td><td class="pin">GPIO 14</td><td>Output RPM ke tachometer</td></tr>
+<tr><td>L298 ENA</td><td class="pin">GPIO 32</td><td>PWM motor / ISC</td></tr>
 </table>
 </div>
 
-<!-- MCP2515 -->
+<!-- ================= MCP2515 ================= -->
 <div class="section">
 <h2>2️⃣ MCP2515 CAN BUS</h2>
 <table>
 <tr><th>MCP2515</th><th>ESP32</th><th>Catatan</th></tr>
-<tr><td>CS</td><td class="pin">GPIO5</td><td>SPI CS</td></tr>
-<tr><td>INT</td><td class="pin">GPIO4</td><td>Interrupt CAN</td></tr>
-<tr><td>MOSI</td><td class="pin">GPIO23</td><td>SPI default</td></tr>
-<tr><td>MISO</td><td class="pin">GPIO19</td><td>SPI default</td></tr>
-<tr><td>SCK</td><td class="pin">GPIO18</td><td>SPI default</td></tr>
-<tr><td>CANH</td><td>-</td><td>Ke OBD / Scanner</td></tr>
-<tr><td>CANL</td><td>-</td><td>Ke OBD / Scanner</td></tr>
+<tr><td>CS</td><td class="pin">GPIO 5</td><td>SPI CS</td></tr>
+<tr><td>INT</td><td class="pin">GPIO 4</td><td>Interrupt CAN</td></tr>
+<tr><td>MOSI</td><td class="pin">GPIO 23</td><td>SPI default</td></tr>
+<tr><td>MISO</td><td class="pin">GPIO 19</td><td>SPI default</td></tr>
+<tr><td>SCK</td><td class="pin">GPIO 18</td><td>SPI default</td></tr>
+<tr><td>CANH</td><td>—</td><td>Ke OBD / Scanner</td></tr>
+<tr><td>CANL</td><td>—</td><td>Ke OBD / Scanner</td></tr>
 </table>
 </div>
 
-<!-- ADS1115 -->
+<!-- ================= ADS1115 ================= -->
 <div class="section">
 <h2>3️⃣ ADS1115 (ADC)</h2>
 
@@ -106,18 +107,18 @@ th {
 <tr><th>Channel</th><th>Sensor</th></tr>
 <tr><td>A0</td><td>O2 Sensor</td></tr>
 <tr><td>A1</td><td>Knock Sensor</td></tr>
-<tr><td>A2</td><td>RPM Potensiometer</td></tr>
+<tr><td>A2</td><td>RPM Potensiometer (Simulasi)</td></tr>
 <tr><td>A3</td><td>Spare</td></tr>
 </table>
 </div>
 
-<!-- PCF8574 -->
+<!-- ================= PCF8574 ================= -->
 <div class="section">
-<h2>4️⃣ PCF8574 Output Expanders</h2>
+<h2>4️⃣ PCF8574 I/O Expanders</h2>
 
 <h3>PCF8574 #1 (0x20) <span class="badge">AKTIF LOW</span></h3>
 <table>
-<tr><th>Pin</th><th>Output</th></tr>
+<tr><th>Pin</th><th>Fungsi</th></tr>
 <tr><td>P0</td><td>INJ 1</td></tr>
 <tr><td>P1</td><td>INJ 2</td></tr>
 <tr><td>P2</td><td>INJ 3</td></tr>
@@ -130,41 +131,47 @@ th {
 
 <h3>PCF8574 #2 (0x21) <span class="badge">AKTIF HIGH</span></h3>
 <table>
-<tr><th>Pin</th><th>Output</th></tr>
+<tr><th>Pin</th><th>Fungsi</th></tr>
 <tr><td>P0</td><td>ISC A</td></tr>
 <tr><td>P1</td><td>ISC B</td></tr>
 <tr><td>P2</td><td>ISC C</td></tr>
 <tr><td>P3</td><td>ISC D</td></tr>
 <tr><td>P4</td><td>MIL Lamp</td></tr>
-<tr><td>P5</td><td>FUEL Lamp</td></tr>
-<tr><td>P6</td><td>FAN Lamp</td></tr>
-<tr><td>P7</td><td>Spare</td></tr>
+<tr><td>P5</td><td>FUEL Pump Relay</td></tr>
+<tr><td>P6</td><td>FAN Relay</td></tr>
+<tr><td><b>P7</b></td><td><b>START (STA) – Tombol Start</b></td></tr>
 </table>
+
+<p class="note">
+START (STA): Tombol → P7 → GND<br>
+Logika: LOW = START aktif
+</p>
 </div>
 
-<!-- L298 -->
+<!-- ================= L298 ================= -->
 <div class="section">
 <h2>5️⃣ L298N Motor Driver</h2>
 <table>
 <tr><th>L298N</th><th>Koneksi</th><th>Catatan</th></tr>
-<tr><td>ENA</td><td class="pin">GPIO32</td><td>PWM speed</td></tr>
-<tr><td>IN1</td><td>HIGH</td><td>Hardwired</td></tr>
-<tr><td>IN2</td><td>LOW</td><td>Hardwired</td></tr>
-<tr><td>OUT1/2</td><td>Motor</td><td>Fixed direction</td></tr>
+<tr><td>ENA</td><td class="pin">GPIO 32</td><td>PWM speed</td></tr>
+<tr><td>IN1</td><td>HIGH</td><td>Arah tetap</td></tr>
+<tr><td>IN2</td><td>LOW</td><td>Arah tetap</td></tr>
+<tr><td>OUT1 / OUT2</td><td>Motor ISC</td><td>Idle control</td></tr>
 </table>
 </div>
 
-<!-- Notes -->
+<!-- ================= NOTES ================= -->
 <div class="section">
 <h2>⚠️ Catatan Penting</h2>
 <ul>
-<li>CKP hanya <b>1 pin (N1+)</b> sesuai UPDATE kode</li>
-<li>CKP GEN OUT bisa di-loop ke CKP IN untuk simulasi start</li>
-<li>PCF1 aktif LOW → pakai transistor / optocoupler</li>
-<li>Semua GND harus common</li>
-<li>CAN wajib pakai resistor 120Ω (jika ujung bus)</li>
+<li>CKP hanya 1 pin (N1+) sesuai update kode</li>
+<li>CKP GEN OUT boleh di-loop ke CKP IN untuk simulasi</li>
+<li>PCF8574 #1 aktif LOW → wajib driver transistor</li>
+<li>START aman via PCF karena hanya logika ON/OFF</li>
+<li>Semua GND wajib common</li>
+<li>CAN bus gunakan resistor 120Ω di ujung</li>
 </ul>
 </div>
 
 </body>
-                               </html>
+</html>
