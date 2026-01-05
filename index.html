@@ -1,176 +1,354 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>ECU EMU Wiring Diagram - ESP32</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ECU EMU Wiring Diagram - BZ840 Style (ESP32)</title>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #0f172a;
-  color: #e5e7eb;
-  margin: 20px;
-}
-h1, h2, h3 {
-  color: #38bdf8;
-}
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-bottom: 25px;
-}
-th, td {
-  border: 1px solid #334155;
-  padding: 8px;
-  text-align: left;
-}
-th {
-  background: #1e293b;
-  color: #7dd3fc;
-}
-.section {
-  border: 1px solid #334155;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  background: #020617;
-}
-.pin {
-  color: #22c55e;
-}
-.badge {
-  background: #2563eb;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-.note {
-  color: #facc15;
-}
+  :root{
+    --bg:#0b1220;
+    --panel:#071024;
+    --panel2:#050b18;
+    --line:#22304a;
+    --line2:#1b2942;
+    --text:#e5e7eb;
+    --muted:#a7b0c2;
+    --accent:#38bdf8;
+    --ok:#22c55e;
+    --warn:#facc15;
+    --bad:#fb7185;
+    --tag:#1e3a8a;
+  }
+  body{
+    font-family: Arial, sans-serif;
+    background: radial-gradient(1200px 600px at 20% 0%, #0f2144 0%, var(--bg) 55%);
+    color: var(--text);
+    margin: 18px;
+    line-height: 1.35;
+  }
+  h1,h2,h3{
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  p{ color: var(--muted); margin: 6px 0 14px; }
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 980px){
+    .grid{ grid-template-columns: 1fr 1fr; }
+  }
+  .section{
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+    padding: 14px;
+    border-radius: 10px;
+  }
+  .section .subtitle{
+    margin-top: -6px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  table{
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 10px;
+  }
+  th,td{
+    border: 1px solid var(--line2);
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th{
+    background: rgba(30,41,59,.7);
+    color: #cfefff;
+    font-weight: 700;
+  }
+  .pin{ color: var(--ok); font-weight: 700; }
+  .term{ color:#c7d2fe; font-weight:700; }
+  .badge{
+    display:inline-block;
+    background: var(--tag);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    margin-left: 6px;
+    color:#dbeafe;
+    border:1px solid #274690;
+  }
+  .note{ color: var(--warn); }
+  .danger{ color: var(--bad); }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  ul{ margin: 8px 0 0 18px; color: var(--muted); }
+  li{ margin: 5px 0; }
+  .kvs{
+    display:flex; gap:10px; flex-wrap:wrap; margin-top:8px
+  }
+  .kv{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    border-radius:10px;
+    background: rgba(2,6,23,.45);
+    font-size:13px;
+    color: var(--muted);
+  }
+  .kv b{ color: var(--text); }
+  .footer{
+    margin-top: 14px;
+    font-size: 12px;
+    color: #93a4c7;
+    opacity: .9;
+  }
 </style>
 </head>
 
 <body>
 
-<h1>🔧 ECU EMU Wiring Diagram</h1>
-<p>ESP32 + MCP2515 + 2× PCF8574 + 2× ADS1115 + L298N</p>
-
-<!-- ================= ESP32 ================= -->
-<div class="section">
-<h2>1️⃣ ESP32 Core Pins</h2>
-<table>
-<tr><th>Fungsi</th><th>GPIO ESP32</th><th>Keterangan</th></tr>
-<tr><td>CAN CS</td><td class="pin">GPIO 5</td><td>MCP2515 CS</td></tr>
-<tr><td>CAN INT</td><td class="pin">GPIO 4</td><td>MCP2515 Interrupt</td></tr>
-<tr><td>I2C SDA</td><td class="pin">GPIO 21</td><td>ADS1115 + PCF8574</td></tr>
-<tr><td>I2C SCL</td><td class="pin">GPIO 22</td><td>ADS1115 + PCF8574</td></tr>
-<tr><td>CKP IN (N1+)</td><td class="pin">GPIO 27</td><td>Input pulsa CKP (REAL)</td></tr>
-<tr><td>CKP GEN OUT</td><td class="pin">GPIO 16</td><td>Output CKP 33-3 (loop test)</td></tr>
-<tr><td>CMP IN</td><td class="pin">GPIO 34</td><td>Input pulsa CMP</td></tr>
-<tr><td>VVT Sense</td><td class="pin">GPIO 25</td><td>ON = VVT terpasang</td></tr>
-<tr><td>VVT PWM</td><td class="pin">GPIO 33</td><td>PWM solenoid VVT</td></tr>
-<tr><td>REV OUT</td><td class="pin">GPIO 14</td><td>Output RPM ke tachometer</td></tr>
-<tr><td>L298 ENA</td><td class="pin">GPIO 32</td><td>PWM motor / ISC</td></tr>
-</table>
-</div>
-
-<!-- ================= MCP2515 ================= -->
-<div class="section">
-<h2>2️⃣ MCP2515 CAN BUS</h2>
-<table>
-<tr><th>MCP2515</th><th>ESP32</th><th>Catatan</th></tr>
-<tr><td>CS</td><td class="pin">GPIO 5</td><td>SPI CS</td></tr>
-<tr><td>INT</td><td class="pin">GPIO 4</td><td>Interrupt CAN</td></tr>
-<tr><td>MOSI</td><td class="pin">GPIO 23</td><td>SPI default</td></tr>
-<tr><td>MISO</td><td class="pin">GPIO 19</td><td>SPI default</td></tr>
-<tr><td>SCK</td><td class="pin">GPIO 18</td><td>SPI default</td></tr>
-<tr><td>CANH</td><td>—</td><td>Ke OBD / Scanner</td></tr>
-<tr><td>CANL</td><td>—</td><td>Ke OBD / Scanner</td></tr>
-</table>
-</div>
-
-<!-- ================= ADS1115 ================= -->
-<div class="section">
-<h2>3️⃣ ADS1115 (ADC)</h2>
-
-<h3>ADS1115 #1 (0x48)</h3>
-<table>
-<tr><th>Channel</th><th>Sensor</th></tr>
-<tr><td>A0</td><td>MAP</td></tr>
-<tr><td>A1</td><td>TPS</td></tr>
-<tr><td>A2</td><td>ECT / WTS</td></tr>
-<tr><td>A3</td><td>IAT</td></tr>
-</table>
-
-<h3>ADS1115 #2 (0x49)</h3>
-<table>
-<tr><th>Channel</th><th>Sensor</th></tr>
-<tr><td>A0</td><td>O2 Sensor</td></tr>
-<tr><td>A1</td><td>Knock Sensor</td></tr>
-<tr><td>A2</td><td>RPM Potensiometer (Simulasi)</td></tr>
-<tr><td>A3</td><td>Spare</td></tr>
-</table>
-</div>
-
-<!-- ================= PCF8574 ================= -->
-<div class="section">
-<h2>4️⃣ PCF8574 I/O Expanders</h2>
-
-<h3>PCF8574 #1 (0x20) <span class="badge">AKTIF LOW</span></h3>
-<table>
-<tr><th>Pin</th><th>Fungsi</th></tr>
-<tr><td>P0</td><td>INJ 1</td></tr>
-<tr><td>P1</td><td>INJ 2</td></tr>
-<tr><td>P2</td><td>INJ 3</td></tr>
-<tr><td>P3</td><td>INJ 4</td></tr>
-<tr><td>P4</td><td>COIL 1</td></tr>
-<tr><td>P5</td><td>COIL 2</td></tr>
-<tr><td>P6</td><td>COIL 3</td></tr>
-<tr><td>P7</td><td>COIL 4</td></tr>
-</table>
-
-<h3>PCF8574 #2 (0x21) <span class="badge">AKTIF HIGH</span></h3>
-<table>
-<tr><th>Pin</th><th>Fungsi</th></tr>
-<tr><td>P0</td><td>ISC A</td></tr>
-<tr><td>P1</td><td>ISC B</td></tr>
-<tr><td>P2</td><td>ISC C</td></tr>
-<tr><td>P3</td><td>ISC D</td></tr>
-<tr><td>P4</td><td>MIL Lamp</td></tr>
-<tr><td>P5</td><td>FUEL Pump Relay</td></tr>
-<tr><td>P6</td><td>FAN Relay</td></tr>
-<tr><td><b>P7</b></td><td><b>START (STA) – Tombol Start</b></td></tr>
-</table>
-
-<p class="note">
-START (STA): Tombol → P7 → GND<br>
-Logika: LOW = START aktif
+<h1>🔧 ECU Emulator Wiring Diagram (Gaya ECU Asli BZ840)</h1>
+<p>
+  Diagram ini dirapikan agar <b>lebih mirip ECU OEM (BZ840)</b>: ada pembagian <b>Power</b>, <b>Ground Sensor (E1/E2)</b>,
+  <b>Reference 5V (VC)</b>, sinyal <b>NE/G</b> (CKP/CMP), sensor analog, serta output <b>low-side driver</b> untuk injektor/coil/relay.
 </p>
+
+<div class="kvs">
+  <div class="kv"><b>Core:</b> ESP32 + MCP2515</div>
+  <div class="kv"><b>I/O:</b> 2×PCF8574, 2×ADS1115</div>
+  <div class="kv"><b>Actuator:</b> L298N (ISC motor)</div>
+  <div class="kv"><b>CAN:</b> OBD-II (Pin 6/14) / Scanner</div>
 </div>
 
-<!-- ================= L298 ================= -->
-<div class="section">
-<h2>5️⃣ L298N Motor Driver</h2>
-<table>
-<tr><th>L298N</th><th>Koneksi</th><th>Catatan</th></tr>
-<tr><td>ENA</td><td class="pin">GPIO 32</td><td>PWM speed</td></tr>
-<tr><td>IN1</td><td>HIGH</td><td>Arah tetap</td></tr>
-<tr><td>IN2</td><td>LOW</td><td>Arah tetap</td></tr>
-<tr><td>OUT1 / OUT2</td><td>Motor ISC</td><td>Idle control</td></tr>
-</table>
-</div>
+<div class="grid">
 
-<!-- ================= NOTES ================= -->
-<div class="section">
-<h2>⚠️ Catatan Penting</h2>
-<ul>
-<li>CKP hanya 1 pin (N1+) sesuai update kode</li>
-<li>CKP GEN OUT boleh di-loop ke CKP IN untuk simulasi</li>
-<li>PCF8574 #1 aktif LOW → wajib driver transistor</li>
-<li>START aman via PCF karena hanya logika ON/OFF</li>
-<li>Semua GND wajib common</li>
-<li>CAN bus gunakan resistor 120Ω di ujung</li>
-</ul>
+  <!-- POWER & GROUND (REALISTIC ECU) -->
+  <div class="section">
+    <h2>1️⃣ Power & Ground (Terminal Style ECU)</h2>
+    <div class="subtitle">
+      Pada ECU asli BZ840 biasanya ada jalur <span class="term">+B / BATT</span>, <span class="term">IGSW</span>, <span class="term">STA</span>,
+      dan ground terpisah: <span class="term">E1/E01 (power GND)</span> & <span class="term">E2 (sensor GND)</span>.
+    </div>
+
+    <table>
+      <tr>
+        <th>Terminal (OEM Style)</th>
+        <th>Implementasi di Trainer</th>
+        <th>Catatan Realistis</th>
+      </tr>
+      <tr>
+        <td class="term">+B / BATT</td>
+        <td>Supply modul (5V/3.3V regulator)</td>
+        <td>Gunakan PSU stabil. Satukan ground semua modul.</td>
+      </tr>
+      <tr>
+        <td class="term">IGSW (Ignition Switch)</td>
+        <td>Input digital (opsional) ke ESP32</td>
+        <td>Meniru “kunci ON”. Bisa dibuat saklar panel.</td>
+      </tr>
+      <tr>
+        <td class="term">STA (Start Signal)</td>
+        <td><b>PCF#2 P7</b> (input tombol) atau GPIO direct</td>
+        <td>Di ECU asli, STA dipakai untuk start logic (fuel prime, crank, rpm enable).</td>
+      </tr>
+      <tr>
+        <td class="term">E1/E01 (Power GND)</td>
+        <td>GND sistem (chassis)</td>
+        <td>Ground relay/driver, motor, power.</td>
+      </tr>
+      <tr>
+        <td class="term">E2 (Sensor GND)</td>
+        <td>Ground sensor khusus (star ground)</td>
+        <td class="note">Sangat penting untuk pembelajaran noise sensor. Pisahkan jalur E2 dari ground motor/relay lalu gabung di 1 titik.</td>
+      </tr>
+      <tr>
+        <td class="term">VC (5V Ref Sensor)</td>
+        <td>5V reference ke sensor (TPS/MAP)</td>
+        <td>Kalau sensor analog pakai 0–5V, pastikan pembagi/level ke ADS1115 sesuai range.</td>
+      </tr>
+    </table>
+
+    <p class="footer note">
+      Tips realistis: buat terminal panel “+B, IGSW, STA, E1, E2, VC” agar siswa paham konsep harness ECU.
+    </p>
+  </div>
+
+  <!-- ESP32 PIN MAP -->
+  <div class="section">
+    <h2>2️⃣ ESP32 Core Pins (Ringkas & Konsisten)</h2>
+    <div class="subtitle">
+      Pin tetap seperti milik kamu, tapi diberi label fungsi ala ECU.
+    </div>
+    <table>
+      <tr><th>Fungsi</th><th>GPIO ESP32</th><th>Label ECU (Style)</th><th>Keterangan</th></tr>
+      <tr><td>CAN CS</td><td class="pin">GPIO 5</td><td class="term">CAN_CS</td><td>MCP2515 CS</td></tr>
+      <tr><td>CAN INT</td><td class="pin">GPIO 4</td><td class="term">CAN_INT</td><td>Interrupt MCP2515</td></tr>
+      <tr><td>I2C SDA</td><td class="pin">GPIO 21</td><td class="term">SDA</td><td>ADS1115 + PCF8574</td></tr>
+      <tr><td>I2C SCL</td><td class="pin">GPIO 22</td><td class="term">SCL</td><td>ADS1115 + PCF8574</td></tr>
+      <tr><td>CKP IN</td><td class="pin">GPIO 27</td><td class="term">NE+ (CKP)</td><td>Input pulsa CKP (NE)</td></tr>
+      <tr><td>CKP GEN OUT</td><td class="pin">GPIO 16</td><td class="term">NE_OUT</td><td>Pembangkit sinyal CKP 33-3 (simulasi)</td></tr>
+      <tr><td>CMP IN</td><td class="pin">GPIO 34</td><td class="term">G (CMP)</td><td>Input pulsa CMP (G)</td></tr>
+      <tr><td>VVT Sense</td><td class="pin">GPIO 25</td><td class="term">VVT_FB</td><td>Deteksi / sense</td></tr>
+      <tr><td>VVT PWM</td><td class="pin">GPIO 33</td><td class="term">OCV</td><td>PWM solenoid VVT-i</td></tr>
+      <tr><td>REV OUT</td><td class="pin">GPIO 14</td><td class="term">TACH</td><td>Output RPM ke tachometer</td></tr>
+      <tr><td>L298 ENA</td><td class="pin">GPIO 32</td><td class="term">ISC_PWM</td><td>PWM motor / ISC</td></tr>
+    </table>
+  </div>
+
+  <!-- CAN / OBD -->
+  <div class="section">
+    <h2>3️⃣ CAN Bus (MCP2515) & OBD-II</h2>
+    <div class="subtitle">
+      Untuk realistis, tampilkan juga opsi koneksi ke soket OBD kendaraan.
+    </div>
+
+    <table>
+      <tr><th>MCP2515</th><th>ESP32</th><th>Catatan</th></tr>
+      <tr><td>CS</td><td class="pin">GPIO 5</td><td>SPI CS</td></tr>
+      <tr><td>INT</td><td class="pin">GPIO 4</td><td>Interrupt CAN (aktif LOW)</td></tr>
+      <tr><td>MOSI</td><td class="pin">GPIO 23</td><td>SPI MOSI</td></tr>
+      <tr><td>MISO</td><td class="pin">GPIO 19</td><td>SPI MISO</td></tr>
+      <tr><td>SCK</td><td class="pin">GPIO 18</td><td>SPI Clock</td></tr>
+      <tr><td>CANH</td><td>—</td><td><b>OBD Pin 6</b> (standar) / ke node CAN lain</td></tr>
+      <tr><td>CANL</td><td>—</td><td><b>OBD Pin 14</b> (standar) / ke node CAN lain</td></tr>
+      <tr><td>GND</td><td>—</td><td class="danger"><b>Wajib common ground</b> dengan node lain, kalau tidak TX bisa FAIL(6)</td></tr>
+    </table>
+
+    <p class="note">
+      Terminasi: idealnya 2×120Ω di ujung bus. Jika hanya latihan meja (2 node), pasang 120Ω di masing-masing ujung kabel.
+    </p>
+  </div>
+
+  <!-- ENGINE POSITION: NE/G -->
+  <div class="section">
+    <h2>4️⃣ Engine Position (NE & G) — CKP/CMP ala ECU</h2>
+    <div class="subtitle">
+      ECU asli menerima sinyal <span class="term">NE</span> (crank/CKP) dan <span class="term">G</span> (cam/CMP). Sinyal sensor asli bisa VR/Hall,
+      jadi di trainer sebaiknya ada conditioning (komparator/Schmitt).
+    </div>
+
+    <table>
+      <tr><th>Sinyal</th><th>Koneksi</th><th>Catatan Realistis</th></tr>
+      <tr>
+        <td class="term">NE+ (CKP IN)</td>
+        <td class="pin">GPIO 27</td>
+        <td>Input pulsa (hasil conditioning). Jika langsung dari sensor VR, wajib rangkaian penguat/komparator.</td>
+      </tr>
+      <tr>
+        <td class="term">NE_OUT (CKP GEN)</td>
+        <td class="pin">GPIO 16</td>
+        <td>Simulasi pola 33-3. Boleh di-loop ke NE+ untuk test tanpa sensor.</td>
+      </tr>
+      <tr>
+        <td class="term">G (CMP IN)</td>
+        <td class="pin">GPIO 34</td>
+        <td>Input CMP (cam). Idealnya level 0–3.3V (Hall) atau hasil conditioning.</td>
+      </tr>
+    </table>
+
+    <p class="footer note">
+      Untuk makin mirip ECU: tambahkan terminal panel “NE+, NE-, G+, G-” walau internal kamu hanya pakai “NE+ & G”.
+    </p>
+  </div>
+
+  <!-- ADS1115 / SENSORS -->
+  <div class="section">
+    <h2>5️⃣ Sensor Analog (ADS1115) — Label ala BZ840</h2>
+    <div class="subtitle">
+      Sensor analog biasanya punya 3 jalur: <b>VC (5V)</b>, <b>Signal</b>, <b>E2 (sensor ground)</b>.
+      Pakai label OEM biar siswa familiar.
+    </div>
+
+    <h3>ADS1115 #1 <span class="badge">0x48</span></h3>
+    <table>
+      <tr><th>Channel</th><th>Sensor</th><th>Nama Terminal (OEM Style)</th><th>Catatan</th></tr>
+      <tr><td>A0</td><td>MAP</td><td class="term">PIM / MAP</td><td>Signal ke ADC, referensi E2</td></tr>
+      <tr><td>A1</td><td>TPS</td><td class="term">VTA</td><td>TPS signal (0.5–4.5V typical)</td></tr>
+      <tr><td>A2</td><td>ECT / WTS</td><td class="term">THW</td><td>NTC (biasanya divider), lebih realistis pakai pull-up dan baca tegangan</td></tr>
+      <tr><td>A3</td><td>IAT</td><td class="term">THA</td><td>NTC (IAT), konsep sama THW</td></tr>
+    </table>
+
+    <h3>ADS1115 #2 <span class="badge">0x49</span></h3>
+    <table>
+      <tr><th>Channel</th><th>Sensor</th><th>Nama Terminal (OEM Style)</th><th>Catatan</th></tr>
+      <tr><td>A0</td><td>O2 Sensor</td><td class="term">OX / AF</td><td>Tergantung tipe (narrowband/AFR). Untuk trainer boleh disimulasikan.</td></tr>
+      <tr><td>A1</td><td>Knock</td><td class="term">KNK</td><td>Asli piezo AC kecil → perlu conditioning. Trainer bisa pakai simulasi tegangan.</td></tr>
+      <tr><td>A2</td><td>RPM Pot (Simulasi)</td><td class="term">RPM_SIM</td><td>Untuk demo tanpa CKP, atau sebagai pengatur CKP_GEN</td></tr>
+      <tr><td>A3</td><td>Spare</td><td class="term">SPARE</td><td>Cadangan</td></tr>
+    </table>
+  </div>
+
+  <!-- PCF8574 OUTPUTS: REALISTIC LOW SIDE -->
+  <div class="section">
+    <h2>6️⃣ Output Driver (PCF8574) — Gaya ECU Asli</h2>
+    <div class="subtitle">
+      ECU asli umumnya mengendalikan injektor/relay dengan <b>low-side switch</b> (menarik ke ground).
+      Karena PCF8574 arus kecil, wajib driver transistor/MOSFET.
+    </div>
+
+    <h3>PCF8574 #1 <span class="badge">0x20</span> <span class="badge">AKTIF LOW</span></h3>
+    <table>
+      <tr><th>Pin PCF</th><th>Output</th><th>Label ECU (Style)</th><th>Catatan Realistis</th></tr>
+      <tr><td>P0</td><td>INJ 1</td><td class="term">INJ1</td><td>Low-side driver via NPN/MOSFET + diode/flyback</td></tr>
+      <tr><td>P1</td><td>INJ 2</td><td class="term">INJ2</td><td>Sama</td></tr>
+      <tr><td>P2</td><td>INJ 3</td><td class="term">INJ3</td><td>Sama</td></tr>
+      <tr><td>P3</td><td>INJ 4</td><td class="term">INJ4</td><td>Sama</td></tr>
+      <tr><td>P4</td><td>COIL 1</td><td class="term">IGT1</td><td>Untuk coil-asli biasanya IGT ke igniter. Trainer bisa relay/LED via driver.</td></tr>
+      <tr><td>P5</td><td>COIL 2</td><td class="term">IGT2</td><td>Sama</td></tr>
+      <tr><td>P6</td><td>COIL 3</td><td class="term">IGT3</td><td>Sama</td></tr>
+      <tr><td>P7</td><td>COIL 4</td><td class="term">IGT4</td><td>Sama</td></tr>
+    </table>
+
+    <h3>PCF8574 #2 <span class="badge">0x21</span> <span class="badge">Disarankan Low-Side</span></h3>
+    <table>
+      <tr><th>Pin PCF</th><th>Fungsi</th><th>Label ECU (Style)</th><th>Catatan</th></tr>
+      <tr><td>P0</td><td>ISC A</td><td class="term">ISC1</td><td>Step/phase (opsional, tergantung model ISC)</td></tr>
+      <tr><td>P1</td><td>ISC B</td><td class="term">ISC2</td><td>—</td></tr>
+      <tr><td>P2</td><td>ISC C</td><td class="term">ISC3</td><td>—</td></tr>
+      <tr><td>P3</td><td>ISC D</td><td class="term">ISC4</td><td>—</td></tr>
+      <tr><td>P4</td><td>MIL Lamp</td><td class="term">MIL</td><td>Lebih realistis: PCF mengendalikan transistor, lampu ke +12V</td></tr>
+      <tr><td>P5</td><td>Fuel Pump Relay</td><td class="term">FC / FPR</td><td>ECU asli sering keluarkan “FC” untuk relay pompa</td></tr>
+      <tr><td>P6</td><td>Fan Relay</td><td class="term">FAN</td><td>Low-side driver relay + diode</td></tr>
+      <tr><td><b>P7</b></td><td><b>STA Input</b></td><td class="term"><b>STA</b></td><td><b>Input tombol start (ke GND). LOW=aktif</b></td></tr>
+    </table>
+
+    <p class="note">
+      Realistis kelistrikan: Relay coil satu sisi ke +12V, sisi lain ditarik ke GND oleh transistor (dikendalikan PCF). Tambahkan diode 1N4007 paralel coil.
+    </p>
+  </div>
+
+  <!-- L298N -->
+  <div class="section">
+    <h2>7️⃣ L298N (Motor ISC / Throttle) — Realistic Notes</h2>
+    <div class="subtitle">
+      ECU asli banyak memakai stepper/ISC/ETCS. L298N cocok untuk demonstrasi motor/valve.
+    </div>
+    <table>
+      <tr><th>L298N</th><th>Koneksi</th><th>Catatan</th></tr>
+      <tr><td>ENA</td><td class="pin">GPIO 32</td><td>PWM speed (ISC_PWM)</td></tr>
+      <tr><td>IN1</td><td>HIGH</td><td>Arah tetap (demo sederhana)</td></tr>
+      <tr><td>IN2</td><td>LOW</td><td>Arah tetap (demo sederhana)</td></tr>
+      <tr><td>OUT1/OUT2</td><td>Motor</td><td>Gunakan supply motor terpisah & common ground</td></tr>
+    </table>
+  </div>
+
+  <!-- NOTES -->
+  <div class="section">
+    <h2>⚠️ Catatan Penting (Agar Mirip ECU Asli)</h2>
+    <ul>
+      <li><b>Low-side driver:</b> Output ECU umumnya “menarik ke ground”. Untuk trainer, PCF wajib lewat transistor/MOSFET.</li>
+      <li><b>Grounding:</b> Pisahkan jalur <span class="term">E2 (sensor)</span> dari <span class="term">E1 (power)</span>, lalu gabungkan di satu titik (star).</li>
+      <li><b>STA & IGSW:</b> Buat saklar panel (IGSW) dan tombol (STA) supaya alur start realistis.</li>
+      <li><b>CKP/CMP:</b> Untuk sensor asli (VR/piezo), butuh conditioning (LM358/LMV/komparator). Untuk latihan, gunakan CKP_GEN loopback.</li>
+      <li><b>CAN:</b> TX FAIL(6) biasanya karena tidak ada node lain/ACK, wiring CANH/CANL salah, terminasi tidak benar, atau bitrate salah.</li>
+      <li><b>OBD:</b> Jika memakai konektor OBD kendaraan, pakai <b>Pin 6 CANH</b>, <b>Pin 14 CANL</b>, <b>Pin 4/5 GND</b>.</li>
+    </ul>
+    <p class="footer">
+      Versi ini fokus “wiring konsep OEM” agar siswa SMK paham harness ECU seperti BZ840: terminal, ground, referensi 5V, sinyal NE/G, dan output driver.
+    </p>
+  </div>
+
 </div>
 
 </body>
